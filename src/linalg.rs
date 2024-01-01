@@ -19,7 +19,7 @@ void BuildMatrix(int n, mycomplex **A, mycomplex *W, mycomplex *B)
 
 
 use num::complex::{Complex64, ComplexFloat};
-use num::Zero;
+use num::{Complex, Zero};
 
 pub fn build_matrix(N: usize, A: &mut Vec<Vec<Complex64>>, W: &mut Vec<Complex64>, B: &mut Vec<Complex64>) {
     for i in 0..N {
@@ -28,9 +28,10 @@ pub fn build_matrix(N: usize, A: &mut Vec<Vec<Complex64>>, W: &mut Vec<Complex64
                 A[i][j] = Complex64::zero();
                 A[j][i] = Complex64::zero();
             }
+            A[i][i] = Complex64::new(1.0, 0.0);
+            B[i] = Complex64::zero();
         }
-        A[i][i] = Complex64::new(1.0, 0.0);
-        B[i] = Complex64::zero();
+
     }
 }
 
@@ -99,18 +100,33 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
         }
     }
 
+
+
+    mult = Complex::new(1., 0.);
     for ii in 0..n {
         mult *= AA[ii][ii];
     }
 
+    // for i in 0..n {
+    //     println!("AA_{} = {:?}", i, AA[0][i]);
+    // }
+    //
+    //
+    // std::process::exit(0);
+
     for k in (0..n).rev() {
         d = Complex64::zero();
         for j in k..n {
-            s += AA[k][j] * U[j];
+            s = AA[k][j] * U[j];
+            d = d + s;
+            //println!("{:?} {:?}",  AA[k][j], U[j]);
         }
+        //std::process::exit(0);
         U[k] = (BB[k] - d) / AA[k][k];
-    }
 
+
+    }
+    //std::process::exit(0);
     mult
 
 }

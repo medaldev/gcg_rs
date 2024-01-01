@@ -1,4 +1,5 @@
-#![feature(generic_const_exprs)]
+// #![feature(generic_const_exprs)]
+// #![feature(const_trait_impl)]
 
 pub mod stream;
 pub mod consts;
@@ -9,9 +10,11 @@ mod memory;
 use num::complex::{Complex64, ComplexFloat};
 use num::{Complex, One, Zero};
 use consts::*;
+use memory::*;
 use matrix_system::{fill_xy_col};
 use crate::linalg::{build_matrix, gauss};
 use crate::matrix_system::{calculate_matrix_col, fill_xy_pos, fill_xyv, fxy, integral_col, r_part_vych, rpart_col};
+use crate::stream::{csv_complex, write_complex_vector};
 
 
 fn main() {
@@ -22,72 +25,70 @@ fn main() {
     println!("K0 = {:?}", K0);
     println!("Frequency = {:?}", HZ);
 
-    let mut J = vec![Complex64::new(0.1, 0.0); N];
-    let mut K = vec![K1; N];
-    let mut W = vec![Complex64::new(1.0, 0.0); N];
-    let mut Bvych = vec![Complex64::zero(); N];
-    let mut Uvych = vec![Complex64::zero(); N];
-    let mut K_inv = vec![Complex64::zero(); N];
-    let mut J_inv = vec![Complex64::zero(); N];
+    let mut J = create_vector_memory(N, Complex64::new(0.1, 0.0));
+    let mut K = create_vector_memory(N, K1);
+    let mut W = create_vector_memory(N, Complex64::new(1.0, 0.0));
+    let mut Bvych = create_vector_memory(N, Complex64::zero());
+    let mut Uvych = create_vector_memory(N, Complex64::zero());
+    let mut K_inv = create_vector_memory(N, Complex64::zero());
+    let mut J_inv = create_vector_memory(N, Complex64::zero());
+
+
 
     println!("******************************DIRECT_PROBLEM******************************");
-    initial_k0::<N>(K.as_mut(), W.as_mut());
+    initial_k0(N, &mut K, &mut W);
 
-    // WriteVector(K, "K.xls", "KK.xls", NUM_X, NUM_Y, n_x, n_y);
-    // CSVmycomplex("K_init_r.csv", "K_init_i.csv", N, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, K);
-    //
+    write_complex_vector(&K, "./output/K.xls","./output/KK.xls", NUM_X, NUM_Y, N_X, N_Y);
+    csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, NUM_X, NUM_Y,
+                N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
-    direct_problem::<N, NUM_X, NUM_Y, N_X, N_Y, ip1, ip2>(&mut W, &mut K, &mut J);
-    r_part_vych(point, shift, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, ip1, &mut Bvych);
-    get_uvych(N, ip1, DIM_X, DIM_Y, &J, &mut Uvych, &mut Bvych, K0);
+    direct_problem(N, NUM_X, NUM_Y, N_X, N_Y, IP1, IP2, &mut W, &mut K, &mut J);
+
+    csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, NUM_X, NUM_Y,
+                N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+    csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, NUM_X, NUM_Y,
+                N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+
+    // Расчёт поля в точках наблюдения
+    r_part_vych(point, shift, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
+    get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
+
+    // Обратная задача
     inverse_p(&mut Uvych, &mut J_inv, &W, &mut K_inv);
-    //DirectProblem(NUM_X, NUM_Y, n_x, n_y, ip1, ip2, N, W, K, J);
 
-    // CSVmycomplex("K_dir_r.csv", "K_dir_i.csv", N, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, K);
-    // CSVmycomplex("J_dir_r.csv", "J_dir_i.csv", N, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, J);
-    //
-    // RpartVych(point, shift, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, K0, N, ip1, Bvych);
-    // Get_Uvych(N, ip1, dim_x, DIM_Y, J, Uvych, Bvych, K0);
-    //
-    // // �������� ������
-    // InverseP(Uvych, J_inv, W, K_inv);
-    // WriteVector(K_inv, "K_inv.xls", "KK_inv.xls", NUM_X, NUM_Y, n_x, n_y);
-    // CSVmycomplex("K_inv_r.csv", "K_inv_i.csv", N, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, K_inv);
-    // CSVmycomplex("J_inv_r.csv", "J_inv_i.csv", N, NUM_X, NUM_Y, n_x, n_y, dim_x, DIM_Y, a, b, J_inv);
+
+    write_complex_vector(&K_inv, "./output/K_inv.xls", "./output/KK_inv.xls", NUM_X, NUM_Y, N_X, N_Y);
+
+    csv_complex("./output/K_inv_r.csv", "./output/K_inv_i.csv",  N, NUM_X, NUM_Y,
+                        N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
+    csv_complex("./output/J_inv_r.csv", "./output/J_inv_i.csv",  N, NUM_X, NUM_Y,
+                        N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
+
 
 }
 
 
 pub fn inverse_p(Uvych: &mut Vec<Complex64>, J1: &mut Vec<Complex64>, W: &Vec<Complex64>, KKK: &mut Vec<Complex64>) {
     println!("********************RUN_INVERSE_PROBLEM********************");
-    get_jj(N, NUM_X, NUM_Y, N_X, N_Y, ip1, A, B, DIM_X, DIM_Y, K0, W, J1, Uvych);
+    get_jj(N, NUM_X, NUM_Y, N_X, N_Y, IP1, A, B, DIM_X, DIM_Y, K0, W, J1, Uvych);
+
     //WriteVector(J1, "J_inv.xls", "JJ_inv.xls", NUM_X, NUM_Y, n_x, n_y);
 
-    get_k1(N, ip1, A, B, DIM_X, DIM_Y, K0, KKK, J1);
+    get_k1(N, IP1, A, B, DIM_X, DIM_Y, K0, KKK, J1);
+
 }
 
 pub fn get_jj(n: usize, num_x: usize, num_y: usize, n_x: usize, n_y: usize, ip: usize, a: f64, b: f64, dim_x: f64, dim_y: f64, k0: Complex64, W: &Vec<Complex64>, J: &mut Vec<Complex64>, Uvych: &mut Vec<Complex64>) {
     let n1 = num_x * num_y;
-    let mut A1 = vec![vec![Complex64::zero(); N]];
-    let A11 = vec![vec![Complex64::zero(); N]];
-    let A2 = vec![vec![Complex64::zero(); N]];
-    let A22 = vec![vec![Complex64::zero(); N]];
-    let A3 = vec![vec![Complex64::zero(); N]];
-    let A33 = vec![vec![Complex64::zero(); N]];
-    let EE = vec![vec![Complex64::zero(); N]];
-    let mut B1 = vec![Complex64::zero(); N];
-    let B2 = vec![Complex64::zero(); N];
-    let B3 = vec![Complex64::zero(); N];
-    let mut W1 = vec![Complex64::new(1.0, 0.0); N];
-    let Uvych_New = vec![Complex64::zero(); N];
+    let mut A1 = create_matrix_memory(n, Complex64::zero());
+    let mut B1 = create_vector_memory(n, Complex64::zero());
+    let mut W1 = create_vector_memory(n, Complex64::new(1.0, 0.0));
 
     let mut xv = vec![0f64; N];
     let mut yv = vec![0f64; N];
-    let mut zv = vec![0f64; N];
 
     let mut x = vec![0f64; N];
     let mut y = vec![0f64; N];
-    let mut z = vec![0f64; N];
 
     fill_xyv(n, num_x, num_y, n_x, n_y, dim_x, dim_y, &mut xv, &mut yv, shift);
     fill_xy_pos(point, n, num_x, num_y, n_x, n_y, dim_x, dim_y, a, b, &mut x, &mut y);
@@ -99,27 +100,26 @@ pub fn get_jj(n: usize, num_x: usize, num_y: usize, n_x: usize, n_y: usize, ip: 
                 false => {0}
             };
 
-            A1[i][j] = integral_col(flag, NUM_X, NUM_Y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0);
+            A1[i][j] = integral_col(flag, num_x, num_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0);
         }
     }
 
     for i in n1..n {
-        Uvych[i] = Complex64::zero();
         for j in n1..n {
             let flag = match i == j {
                 true => {1}
                 false => {0}
             };
 
-            A1[i][j] = integral_col(flag, NUM_X, NUM_Y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0);
+            A1[i][j] = integral_col(flag, num_x, num_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0);
         }
     }
 
-    for i in 0..N {
+    for i in 0..n {
         B1[i] = Uvych[i] - fxy(xv[i], yv[i], 0.0, k0, dim_x, dim_y);
     }
 
-    gauss(N, &A1, &B1, &W1, J);
+    gauss(n, &A1, &B1, &W1, J);
 
 
 
@@ -131,13 +131,13 @@ pub fn get_k1(n: usize, ip: usize, a: f64, b: f64, dim_x: f64, dim_y: f64, k0: C
     let len_x = dim_x / NUM_X as f64;
     let len_y = dim_y / NUM_Y as f64;
 
-    let mut A1 = vec![Complex64::zero(); N];
+    let mut A1 = create_vector_memory(n, Complex64::zero());
 
     let mut x = vec![0f64; N];
     let mut y = vec![0f64; N];
     let mut z = vec![0f64; N];
 
-    fill_xy_pos(point, N, NUM_Y, NUM_Y, N_X, N_Y, dim_x, dim_y, a, b, &mut x, &mut y);
+    fill_xy_pos(point, n, NUM_Y, NUM_Y, N_X, N_Y, dim_x, dim_y, a, b, &mut x, &mut y);
 
     for i in 0..n1 {
         A1[i] = Complex64::zero();
@@ -172,7 +172,7 @@ pub fn get_k1(n: usize, ip: usize, a: f64, b: f64, dim_x: f64, dim_y: f64, k0: C
 
 
 
-pub fn get_uvych(n: usize, ip: usize, dim_x: f64, dim_y: f64, J: &Vec<Complex64>, Uvych: &mut Vec<Complex64>, Bvych: &mut Vec<Complex64>, k0: Complex64) {
+pub fn get_uvych(n: usize, ip: usize, dim_x: f64, dim_y: f64, J: &Vec<Complex64>, Uvych: &mut Vec<Complex64>, Bvych: &Vec<Complex64>, k0: Complex64) {
     let n1 = NUM_X * NUM_Y;
     let A1 = vec![vec![Complex64::zero(); N]; N];
 
@@ -187,6 +187,7 @@ pub fn get_uvych(n: usize, ip: usize, dim_x: f64, dim_y: f64, J: &Vec<Complex64>
     fill_xyv(n, NUM_X, NUM_Y, N_X, N_Y, dim_x, dim_y, &mut xv, &mut yv, shift);
     fill_xy_pos(point, n, NUM_X, NUM_Y, N_X, N_Y, dim_x, dim_y, A, B, &mut x, &mut y);
 
+
     for i in 0..n1 {
         Uvych[i] = Complex64::zero();
         for j in 0..n1 {
@@ -194,9 +195,11 @@ pub fn get_uvych(n: usize, ip: usize, dim_x: f64, dim_y: f64, J: &Vec<Complex64>
                 true => {1}
                 false => {0}
             };
+            let val = integral_col(flag, NUM_X, NUM_Y, dim_x, dim_y, A, B, ip, x[j], y[j], xv[i], yv[i], k0);
 
-            Uvych[i] += integral_col(flag, NUM_X, NUM_Y, dim_x, dim_y, A, B, ip, x[j], y[j], xv[i], yv[i], k0)*J[j];
+            Uvych[i] += val*J[j];
         }
+        Uvych[i] += Bvych[i];
     }
 
     for i in n1..n {
@@ -209,34 +212,36 @@ pub fn get_uvych(n: usize, ip: usize, dim_x: f64, dim_y: f64, J: &Vec<Complex64>
 
             Uvych[i] += integral_col(flag, NUM_X, NUM_Y, dim_x, dim_y, A, B, ip, x[j], y[j], xv[i], yv[i], k0)*J[j];
         }
+        Uvych[i] += Bvych[i];
     }
 }
 
-pub fn direct_problem<
-    const N: usize,
-    const num_x: usize,
-    const num_y: usize,
-    const n_x: usize,
-    const n_y: usize,
-    const ip1: usize,
-    const ip2: usize,
->
+pub fn direct_problem
 (
+    n: usize, num_x: usize, num_y: usize, n_x: usize, n_y: usize, ip1: usize, ip2: usize,
     W: &mut Vec<Complex64>, K: &mut Vec<Complex64>, J: &mut Vec<Complex64>,
 )
 {
-    let mut AA = vec![vec![Complex64::zero(); N]; N];
-    let mut BB = vec![Complex64::zero(); N];
-    rpart_col(N, num_x, num_y, n_x, n_y, DIM_X, DIM_Y, A, B, K0, ip1, ip2, &mut BB);
-
-    calculate_matrix_col(N, num_x, num_y, point, n_x, n_y, ip1, ip2, DIM_X, DIM_Y, A, B, K, &mut AA, K0);
-
-    build_matrix(N, &mut AA, W, &mut BB);
-
-    gauss(N, &AA, &mut BB, &W, J);
+    let mut AA = create_matrix_memory(n, Complex64::zero());
+    let mut BB = create_vector_memory(n, Complex64::zero());
 
 
+    rpart_col(n, num_x, num_y, n_x, n_y, DIM_X, DIM_Y, A, B, K0, ip1, ip2, &mut BB);
 
+    calculate_matrix_col(point, num_x, num_y, n_x, n_y, K, DIM_X, DIM_Y, A, B, n, ip1, ip2, &mut AA, K0);
+    build_matrix(n, &mut AA, W, &mut BB);
+
+    for i in 0..n {
+        J[i] = Complex64::zero();
+    }
+
+    gauss(n, &AA, &BB, &W, J);
+
+    // println!("W{:?}", W);
+    //
+    // println!("J{:?}", J);
+    //
+    // std::process::exit(0);
 
 }
 
@@ -244,7 +249,7 @@ pub fn direct_problem<
 
 pub fn kerr(n: usize, alpha: f64, k1_: Complex64, U: &[Complex64], K: &mut [Complex64], W: &[Complex64]) {
     for p1 in 0..n {
-        K[p1] = (k1_ + Complex64::from(alpha) *U[p1].norm()*U[p1]).norm()*W[p1];
+        K[p1] = (k1_ + alpha *U[p1].norm()*U[p1]).norm()*W[p1];
     }
 }
 
@@ -253,16 +258,16 @@ pub fn get_geometry(n: usize, W: &[Complex64]) {
 }
 
 
-pub fn initial_k0<const N: usize>(K: &mut [Complex64], W: &mut [Complex64]) {
+pub fn initial_k0(n: usize, K: &mut [Complex64], W: &mut [Complex64]) {
 
     let (mut p1, mut p2, mut p3, mut p4) = (0, 0, 0, 0);
     let (mut x, mut y) = (0.0, 0.0);
     let mut s = Complex64::zero();
 
-    let mut xc = [0.0f64; N];
-    let mut yc = [0.0f64; N];
+    let mut xc = create_vector_memory(n, 0.0f64);
+    let mut yc = create_vector_memory(n, 0.0f64);
 
-    fill_xy_col(N, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, xc.as_mut(), yc.as_mut());
+    fill_xy_col(n, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, &mut xc, &mut yc);
 
     let r1 = DIM_X / 2.0;
     let r2 = 3.* DIM_X / 8.0;
@@ -286,6 +291,49 @@ pub fn initial_k0<const N: usize>(K: &mut [Complex64], W: &mut [Complex64]) {
             ind += 1;
         }
     }
+
+    // ind = 0;
+    // for i in 0..N_X {
+    //     for j in 0..N_Y {
+    //
+    //         x = xc[N1 + ind];
+    //         y = yc[N1 + ind];
+    //
+    //         if x * x + y * y <= r1 * r1 {
+    //             K[N1 + ind] = Complex64::new(0.7, 0.);
+    //             if (x < 0.){
+    //                 K[N1 + ind] = Complex64::new(0.6, 0.);
+    //             }
+    //
+    //             W[N1 + ind] = Complex64::new(1.0, 0.);
+    //
+    //             if (x * x + y * y <= r2 * r2) {
+    //                 K[N1 + ind] = K1;
+    //                 W[N1 + ind] = Complex64::zero();
+    //
+    //                 if (x * x + y * y <= r3 * r3) {
+    //                     K[N1 + ind] = Complex64::new(0.35, 0.);
+    //                     if (x < 0.){
+    //                         K[N1 + ind] = Complex64::new(0.25, 0.);
+    //                     }
+    //
+    //                     W[N1 + ind] = Complex64::new(1.0, 0.);
+    //                     if (x * x + y * y <= r4 * r4) {
+    //                         K[N1 + ind] = K1;
+    //                         W[N1 + ind] = Complex64::zero();
+    //                     }
+    //
+    //                 }
+    //             }
+    //         }
+    //         else {
+    //             K[N1 + ind] = K1;
+    //             W[N1 + ind] = Complex64::zero();
+    //         }
+    //
+    //         ind += 1;
+    //     }
+    // }
 
     ind = 0;
     for i2 in 0..NUM_Y {
