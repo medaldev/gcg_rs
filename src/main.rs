@@ -11,6 +11,7 @@ mod inverse_problem;
 mod initial;
 mod neuro;
 
+use std::time::Instant;
 use num::complex::{Complex64, ComplexFloat};
 use num::{Complex, One, Zero};
 use consts::*;
@@ -21,7 +22,6 @@ use crate::initial::initial_k0;
 use crate::inverse_problem::inverse_p;
 use crate::linalg::{build_matrix, gauss};
 use crate::matrix_system::{calculate_matrix_col, fill_xy_pos, fill_xyv, fxy, integral_col, r_part_vych, rpart_col};
-use crate::neuro::run;
 use crate::stream::{csv_complex, write_complex_vector};
 
 
@@ -50,7 +50,10 @@ fn main() {
     csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, NUM_X, NUM_Y,
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
+    let mut start_time = Instant::now();
     direct_problem(N, NUM_X, NUM_Y, N_X, N_Y, IP1, IP2, &mut W, &mut K, &mut J);
+
+    println!(">> Direct problem time: {:?} seconds", start_time.elapsed().as_secs());
 
     csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, NUM_X, NUM_Y,
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
@@ -58,20 +61,22 @@ fn main() {
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
     write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
 
-    let j_denoised_re = run("./output/J_dir_r.xls", MODEL,
+    start_time = Instant::now();
+    let j_denoised_re = neuro::run("./output/J_dir_r.xls", MODEL,
                  "./output/J_dir_r_denoised.xls", true).unwrap().concat();
-    let j_denoised_im = run("./output/J_dir_i.xls", MODEL,
+    let j_denoised_im = neuro::run("./output/J_dir_i.xls", MODEL,
                             "./output/J_dir_i_denoised.xls", true).unwrap().concat();
     //J = build_complex_vector(N, j_denoised_re, j_denoised_im);
-
+    println!(">> Model inference time: {:?} seconds", start_time.elapsed().as_secs());
 
     // Расчёт поля в точках наблюдения
     r_part_vych(point, shift, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
     get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
 
     // Обратная задача
+    start_time = Instant::now();
     inverse_p(&mut Uvych, &mut J_inv, &W, &mut K_inv);
-
+    println!(">> Inverse problem time: {:?} seconds", start_time.elapsed().as_secs());
 
     write_complex_vector(&K_inv, "./output/K_inv.xls", "./output/KK_inv.xls", NUM_X, NUM_Y, N_X, N_Y);
 

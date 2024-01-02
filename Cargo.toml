@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 num = "0.4.1"
 rayon = "1.8.0"
-tch= "0.14.0"
+tch = "0.14.0"
 anyhow = "1.0.78"
+indicatif = "0.17.7"

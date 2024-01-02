@@ -1,4 +1,6 @@
 use rayon::prelude::*;
+use indicatif::{ProgressBar, ProgressStyle};
+
 
 /*
 void BuildMatrix(int n, mycomplex **A, mycomplex *W, mycomplex *B)
@@ -57,8 +59,12 @@ fn is_equal_matrix<T>(n: usize, a: &Vec<Vec<T>>, b: &Vec<Vec<T>>) -> bool where 
     return true
 }
 
+
+
 pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
     println!("SLAU size: {}", A.len());
+    let mut pb = ProgressBar::new(n as u64);
+    pb.set_style(ProgressStyle::with_template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}").unwrap());
     let mut AA = A.clone();
     let mut BB = B.clone();
     let eps = 1e-19;
@@ -69,9 +75,10 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
     let mut mult = Complex64::zero();
 
     for k in 0..n {
-        if k % 100 == 0 {
-            println!("gauss {}\t{}", n, k);
-        }
+        pb.inc(1);
+        // if k % 100 == 0 {
+        //     println!("gauss {}\t{}", n, k);
+        // }
         if AA[k][k].abs() < eps {
             let mut kk = 0;
             for ii in k + 1..n {
@@ -119,6 +126,7 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
         U[k] = (BB[k] - d) / AA[k][k];
 
     }
+    pb.finish_with_message("done");
     mult
 
 }
