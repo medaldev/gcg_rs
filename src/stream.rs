@@ -1,9 +1,10 @@
 use std::fs::File;
 use std::path::Path;
 use num::complex::{Complex64, ComplexFloat};
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use crate::matrix_system::fill_xy_col;
 use crate::memory::create_vector_memory;
+
 
 pub fn write_complex_vector<P: AsRef<Path>>(U: &Vec<Complex64>, path1: P, path2: P, num_x: usize, num_y: usize, n_x: usize, n_y: usize) {
     let mut f1 = File::create(path1).unwrap();
@@ -58,3 +59,17 @@ pub fn csv_complex<P: AsRef<Path>>(path_r: P, path_i: P, n: usize, num_x: usize,
     }
 
 }
+
+
+pub fn read_xls<P: AsRef<Path>>(path: P) -> Vec<Vec<f64>> {
+    let f = BufReader::new(File::open(path).unwrap());
+
+    // Parse the file into a 2D vector
+    let arr: Vec<Vec<f64>> = f.lines()
+        .map(|l| l.unwrap().split('\t')
+            .map(|number| number.parse::<f64>().unwrap())
+            .collect())
+        .collect();
+    arr
+}
+

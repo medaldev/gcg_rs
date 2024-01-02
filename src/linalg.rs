@@ -1,3 +1,5 @@
+use rayon::prelude::*;
+
 /*
 void BuildMatrix(int n, mycomplex **A, mycomplex *W, mycomplex *B)
 {
@@ -56,6 +58,7 @@ fn is_equal_matrix<T>(n: usize, a: &Vec<Vec<T>>, b: &Vec<Vec<T>>) -> bool where 
 }
 
 pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
+    println!("SLAU size: {}", A.len());
     let mut AA = A.clone();
     let mut BB = B.clone();
     let eps = 1e-19;
@@ -67,7 +70,7 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
 
     for k in 0..n {
         if k % 100 == 0 {
-            println!("{}\t{}", n, k);
+            println!("gauss {}\t{}", n, k);
         }
         if AA[k][k].abs() < eps {
             let mut kk = 0;
@@ -107,26 +110,55 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
         mult *= AA[ii][ii];
     }
 
-    // for i in 0..n {
-    //     println!("AA_{} = {:?}", i, AA[0][i]);
-    // }
-    //
-    //
-    // std::process::exit(0);
-
     for k in (0..n).rev() {
         d = Complex64::zero();
         for j in k..n {
             s = AA[k][j] * U[j];
             d = d + s;
-            //println!("{:?} {:?}",  AA[k][j], U[j]);
         }
-        //std::process::exit(0);
         U[k] = (BB[k] - d) / AA[k][k];
 
-
     }
-    //std::process::exit(0);
     mult
 
 }
+
+// pub fn gauss_parallel(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {}
+
+
+// fn pivot(n: usize, A: &mut Vec<Vec<Complex64>>, B: &mut Vec<Complex64>, i: usize) {
+//     let mut max = 0.0;
+//     let mut row = i;
+//
+//     // Find the row with the largest absolute value in column i
+//     for r in i..n {
+//         let val = A[r][i].abs();
+//         if val > max {
+//             max = val;
+//             row = r;
+//         }
+//     }
+//
+//     // Swap rows i and row
+//     if i != row {
+//         A.swap(i, row);
+//         B.swap(i, row);
+//     }
+// }
+//
+// pub fn compute_gauss(n: usize, A: &mut Vec<Vec<Complex64>>, B: &mut Vec<Complex64>) {
+//     for i in 0..n {
+//         pivot(n, A, B, i);
+//
+//         let (row_i, rows) = A[i..n].split_first_mut().unwrap();
+//
+//         rows.par_iter_mut().enumerate().for_each(|(j, row_j)| {
+//             let pivot_val = row_j[i];
+//             row_j[i] = Complex64::zero();
+//             for k in i + 1..n {
+//                 row_j[k] -= pivot_val * row_i[k];
+//             }
+//             B[j] -= pivot_val * B[i];
+//         });
+//     }
+// }
