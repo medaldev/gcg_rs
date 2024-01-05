@@ -22,7 +22,7 @@ use crate::initial::initial_k0;
 use crate::inverse_problem::inverse_p;
 use crate::linalg::{build_matrix, gauss};
 use crate::matrix_system::{calculate_matrix_col, fill_xy_pos, fill_xyv, fxy, integral_col, r_part_vych, rpart_col};
-use crate::stream::{csv_complex, write_complex_vector};
+use crate::stream::{csv_complex, read_complex_vector, write_complex_vector, write_complex_vector_r_i};
 
 
 fn main() {
@@ -59,19 +59,42 @@ fn main() {
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
     csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, NUM_X, NUM_Y,
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
-    write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+    //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+    write_complex_vector_r_i(&J, "./output/J1_dir_r.xls","./output/J1_dir_i.xls",
+                             "./output/J2_dir_r.xls","./output/J2_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
 
     start_time = Instant::now();
-    let j_denoised_re = neuro::run("./output/J_dir_r.xls", MODEL,
-                 "./output/J_dir_r_denoised.xls", true).unwrap().concat();
-    let j_denoised_im = neuro::run("./output/J_dir_i.xls", MODEL,
-                            "./output/J_dir_i_denoised.xls", true).unwrap().concat();
-    //J = build_complex_vector(N, j_denoised_re, j_denoised_im);
+
+    {
+        let j1_denoised_re = neuro::run("./output/J1_dir_r.xls", MODEL,
+                                        "./output/J1_dir_r_denoised.xls", true).unwrap().concat();
+        let j1_denoised_im = neuro::run("./output/J1_dir_i.xls", MODEL,
+                                        "./output/J1_dir_i_denoised.xls", true).unwrap().concat();
+        // let J1 = build_complex_vector(N, j1_denoised_re, j1_denoised_im);
+    }
+
+    {
+        let j2_denoised_re = neuro::run("./output/J2_dir_r.xls", MODEL,
+                                        "./output/J2_dir_r_denoised.xls", true).unwrap().concat();
+        let j2_denoised_im = neuro::run("./output/J2_dir_i.xls", MODEL,
+                                        "./output/J2_dir_i_denoised.xls", true).unwrap().concat();
+        // let J2 = build_complex_vector(N, j2_denoised_re, j2_denoised_im);
+    }
+
+    let mut J_denoised = create_vector_memory(N, Complex64::zero());
+
+    read_complex_vector(&mut J_denoised, "./output/J1_dir_r_denoised.xls", "./output/J1_dir_i_denoised.xls",
+                        "./output/J2_dir_r_denoised.xls", "./output/J2_dir_i_denoised.xls", NUM_X, NUM_Y, N_X, N_Y);
+
+    // println!("{:?}", J);
+    // println!("{:?}", J_denoised);
+    // println!("{:?}", J_denoised == J);
+
     println!(">> Model inference time: {:?} seconds", start_time.elapsed().as_secs());
 
     // Расчёт поля в точках наблюдения
     r_part_vych(point, shift, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
-    get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
+    get_uvych(N, IP1, DIM_X, DIM_Y, &J_denoised, &mut Uvych, &Bvych, K0);
 
     // Обратная задача
     start_time = Instant::now();
