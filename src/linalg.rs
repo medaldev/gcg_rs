@@ -60,6 +60,13 @@ fn is_equal_matrix<T>(n: usize, a: &Vec<Vec<T>>, b: &Vec<Vec<T>>) -> bool where 
 }
 
 
+pub fn min_max_f64_vec(vec: &Vec<f64>) -> (f64, f64) {
+    let min = vec.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).cloned();
+    let max = vec.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).cloned();
+    (min.unwrap(), max.unwrap())
+}
+
+
 
 pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
     println!("SLAU size: {}", A.len());

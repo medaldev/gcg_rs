@@ -43,4 +43,4 @@ pub const ALPHA: f64 = 0.01;
 
 pub const K1: Complex64 = Complex64::new(0.4, 0.0);
 
-pub const MODEL: &str = "./models/traced_model_9.pt";
+pub const MODEL: &str = "./models/model_12.pt";

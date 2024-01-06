@@ -232,6 +232,7 @@ dependencies = [
  "anyhow",
  "indicatif",
  "num",
+ "rand",
  "rayon",
  "tch",
 ]

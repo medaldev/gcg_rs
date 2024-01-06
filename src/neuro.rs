@@ -3,6 +3,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use tch::{Device, IndexOp, Kind, Tensor};
 use tch::utils::has_cuda;
+use crate::linalg::min_max_f64_vec;
 
 
 fn main() {
@@ -57,11 +58,7 @@ pub fn rescale_matrix(matrix: &mut Vec<Vec<f64>>, to_rng: (f64, f64)) {
     }
 }
 
-fn min_max_f64_vec(vec: &Vec<f64>) -> (f64, f64) {
-    let min = vec.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).cloned();
-    let max = vec.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).cloned();
-    (min.unwrap(), max.unwrap())
-}
+
 
 fn matrix_to_file<P: AsRef<Path>>(matrix: &Vec<Vec<f64>>, filename: P) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
