@@ -1,7 +1,7 @@
 use num::complex::Complex64;
 pub use std::f64::consts::PI;
 
-pub const p: usize = 20;
+pub const p: usize = 30;
 pub const point: usize = 2;
 
 pub const NUM_X: usize = p;

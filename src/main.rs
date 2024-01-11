@@ -28,7 +28,10 @@ use crate::stream::{csv_complex, read_complex_vector, write_complex_vector, writ
 
 
 fn main() {
-    println!("******************************START******************************");
+    let global_start_time = Instant::now();
+
+    println!("\n******************************START***************************************");
+
     println!("N = {}", N);
 
     println!("lambda = {} {}", (2.0*PI / K0).abs(), DIM_X / NUM_X as f64);
@@ -37,6 +40,7 @@ fn main() {
 
     let mut J = create_vector_memory(N, Complex64::new(0.1, 0.0));
     let mut K = create_vector_memory(N, K1);
+    let mut K_clone = create_vector_memory(N, K1);
     let mut W = create_vector_memory(N, Complex64::new(1.0, 0.0));
     let mut Bvych = create_vector_memory(N, Complex64::zero());
     let mut Uvych = create_vector_memory(N, Complex64::zero());
@@ -45,12 +49,17 @@ fn main() {
 
 
 
-    println!("******************************DIRECT_PROBLEM******************************");
+    println!("\n******************************DIRECT_PROBLEM******************************");
 
     // Задание начальных значений K
     initial_k0(N, &mut K, &mut W);
+    // read_complex_vector(&mut K, "./output/K1_r.xls", "./output/K1_i.xls",
+    //                     "./output/K2_r.xls", "./output/K2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+
 
     write_complex_vector(&K, "./output/K.xls","./output/KK.xls", NUM_X, NUM_Y, N_X, N_Y);
+    write_complex_vector_r_i(&K, "./output/K1_r.xls","./output/K1_i.xls",
+                             "./output/K2_r.xls","./output/K2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
     csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, NUM_X, NUM_Y,
                 N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
@@ -75,7 +84,7 @@ fn main() {
 
     // ----------------------------------------------------------------------------------------------------------------
     // Внесение шума
-    add_noise(&mut J, 0.15);
+    add_noise(&mut J, 0.50);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Запись зашумлённых данных
@@ -113,7 +122,8 @@ fn main() {
 
     // ----------------------------------------------------------------------------------------------------------------
 
-    // Здесь можно посчитать ошибку
+    // let errors: Vec<f64> = J.iter().zip(J_denoised.iter()).map(|(j1, j2)| ((j1 - j2).abs() * 100.).round() / 100.).collect();
+    // println!("{:?}", errors);
     println!(">> Model inference time: {:?} seconds", start_time.elapsed().as_secs());
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -130,12 +140,18 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     write_complex_vector(&K_inv, "./output/K_inv.xls", "./output/KK_inv.xls", NUM_X, NUM_Y, N_X, N_Y);
 
+    write_complex_vector_r_i(&K_inv, "./output/K_inv1_r.xls","./output/K_inv1_i.xls",
+                             "./output/K_inv2_r.xls","./output/K_inv2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+
     csv_complex("./output/K_inv_r.csv", "./output/K_inv_i.csv",  N, NUM_X, NUM_Y,
                         N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
     csv_complex("./output/J_inv_r.csv", "./output/J_inv_i.csv",  N, NUM_X, NUM_Y,
                         N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
 
-
+    let res_duration =  global_start_time.elapsed().as_secs();
+    let eps_rnd = 1.0e2;
+    println!("\n==========================================================================");
+    println!(">> Total time: {:?} seconds ({:?} minutes)\n", res_duration, ((res_duration as f64) / 60.0 * eps_rnd).round() / eps_rnd);
 }
 
 pub fn add_noise(U: &mut Vec<Complex64>, pct: f64) {

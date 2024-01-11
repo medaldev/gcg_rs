@@ -6,7 +6,7 @@ use crate::matrix_system::{fill_xy_pos, fill_xyv, fxy, integral_col};
 use crate::memory::{create_matrix_memory, create_vector_memory};
 
 pub fn inverse_p(Uvych: &mut Vec<Complex64>, J1: &mut Vec<Complex64>, W: &Vec<Complex64>, KKK: &mut Vec<Complex64>) {
-    println!("********************RUN_INVERSE_PROBLEM********************");
+    println!("\n******************************INVERSE_PROBLEM*****************************");
     get_jj(N, NUM_X, NUM_Y, N_X, N_Y, IP1, A, B, DIM_X, DIM_Y, K0, W, J1, Uvych);
 
     //WriteVector(J1, "J_inv.xls", "JJ_inv.xls", NUM_X, NUM_Y, n_x, n_y);

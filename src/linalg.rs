@@ -1,5 +1,6 @@
 use rayon::prelude::*;
-use indicatif::{ProgressBar, ProgressStyle};
+use pbr::ProgressBar;
+
 
 
 /*
@@ -69,9 +70,8 @@ pub fn min_max_f64_vec(vec: &Vec<f64>) -> (f64, f64) {
 
 
 pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
-    println!("SLAU size: {}", A.len());
     let mut pb = ProgressBar::new(n as u64);
-    pb.set_style(ProgressStyle::with_template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}").unwrap());
+    pb.set_width(Some(75));
     let mut AA = A.clone();
     let mut BB = B.clone();
     let eps = 1e-19;
@@ -82,7 +82,7 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
     let mut mult = Complex64::zero();
 
     for k in 0..n {
-        pb.inc(1);
+        pb.inc();
         // if k % 100 == 0 {
         //     println!("gauss {}\t{}", n, k);
         // }
@@ -133,7 +133,7 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
         U[k] = (BB[k] - d) / AA[k][k];
 
     }
-    pb.finish_with_message("done");
+    pb.finish_println("");
     mult
 
 }
