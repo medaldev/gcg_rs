@@ -33,16 +33,16 @@ use crate::stream::{csv_complex, read_complex_vec_from_binary, read_complex_vect
 fn main() {
 
     // Задание начальных значений K
-    let use_initial_k = true;
+    let use_initial_k = false;
 
     // Загрузка K из файлов
     let load_init_k_from_files = false;
 
     // Решить прямую задачу
-    let solve_direct = true;
+    let solve_direct = false;
 
     // Загрузка J из файлов
-    let load_j_from_files = false;
+    let load_j_from_files = true;
 
     // Внесение шума в J
     let add_noise_j = false;
@@ -110,10 +110,14 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     // Загрузка J из xls файлов
     if load_j_from_files {
-        let j_re = read_long_vector("./input/J_re.xls");
-        let j_im = read_long_vector("./input/J_im.xls");
+        // let j_re = read_long_vector("./input/J_re.xls");
+        // let j_im = read_long_vector("./input/J_im.xls");
+        // let j_loaded = build_complex_vector(N, j_re, j_im);
+        // assert_eq!(J.len(), j_loaded.len());
+        //J = j_loaded;
 
-        J = build_complex_vector(N, j_re, j_im);
+        read_complex_vector(&mut J, "./input/J_re.xls", "./input/J_im.xls", N_X, N_Y);
+
         println!("J was loaded from external files.");
     }
 
@@ -179,12 +183,15 @@ fn main() {
         // Расчёт поля в точках наблюдения
         vych::r_part_vych(POINT, SHIFT, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
         vych::get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
+        println!("Uvych were calculated.");
     }
 
     // Загрузка Uvych из файлов
     if load_uvych_from_files {
 
-        Uvych = read_complex_vec_from_binary("./output/Uvych_r", "./output/Uvych_i");
+        let Uvych_readed = read_complex_vec_from_binary("./input/Uvych_r", "./input/Uvych_i");
+        assert_eq!(Uvych.len(), Uvych_readed.len());
+        Uvych = Uvych_readed;
 
         println!("Uvych was loaded from external files.");
     }
@@ -199,7 +206,7 @@ fn main() {
     if solve_inverse {
         // Обратная задача
         let start_time = Instant::now();
-        inverse_p(&Uvych, &mut J_inv, &W, &mut K_inv);
+        inverse_p(&Uvych, &mut J_inv, &mut K_inv);
         println!(">> Inverse problem time: {:?} seconds", start_time.elapsed().as_secs());
 
         // ----------------------------------------------------------------------------------------------------------------

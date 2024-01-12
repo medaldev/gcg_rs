@@ -5,9 +5,9 @@ use crate::linalg::gauss;
 use crate::matrix_system::{fill_xy_pos, fill_xyv, fxy, integral_col};
 use crate::memory::{create_matrix_memory, create_vector_memory};
 
-pub fn inverse_p(Uvych: &Vec<Complex64>, J1: &mut Vec<Complex64>, W: &Vec<Complex64>, KKK: &mut Vec<Complex64>) {
+pub fn inverse_p(Uvych: &Vec<Complex64>, J1: &mut Vec<Complex64>, KKK: &mut Vec<Complex64>) {
     println!("\n******************************INVERSE_PROBLEM*****************************");
-    get_jj(N, N_X, N_Y, IP1, A, B, DIM_X, DIM_Y, K0, W, J1, Uvych);
+    get_jj(N, N_X, N_Y, IP1, A, B, DIM_X, DIM_Y, K0, J1, Uvych);
 
     //WriteVector(J1, "J_inv.xls", "JJ_inv.xls", NUM_X, NUM_Y, n_x, n_y);
 
@@ -15,7 +15,7 @@ pub fn inverse_p(Uvych: &Vec<Complex64>, J1: &mut Vec<Complex64>, W: &Vec<Comple
 
 }
 
-pub fn get_jj(n: usize, n_x: usize, n_y: usize, ip: usize, a: f64, b: f64, dim_x: f64, dim_y: f64, k0: Complex64, W: &Vec<Complex64>, J: &mut Vec<Complex64>, Uvych: &Vec<Complex64>) {
+pub fn get_jj(n: usize, n_x: usize, n_y: usize, ip: usize, a: f64, b: f64, dim_x: f64, dim_y: f64, k0: Complex64, J: &mut Vec<Complex64>, Uvych: &Vec<Complex64>) {
     let mut A1 = create_matrix_memory(n, Complex64::zero());
     let mut B1 = create_vector_memory(n, Complex64::zero());
     let mut W1 = create_vector_memory(n, Complex64::new(1.0, 0.0));

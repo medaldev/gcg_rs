@@ -115,6 +115,26 @@ pub fn read_complex_vector<P: AsRef<Path>>(U: &mut Vec<Complex64>, path_r: P, pa
 
 }
 
+pub fn get_complex_vector<P: AsRef<Path>>(path_r: P, path_i: P) -> Vec<Complex64> {
+
+    let mut U = vec![];
+
+    let f2_buf_r = BufReader::new(File::open(path_r).unwrap());
+    let f2_buf_i = BufReader::new(File::open(path_i).unwrap());
+
+    for (line_r, line_i) in f2_buf_r.lines().zip(f2_buf_i.lines()) {
+        for (val_str_r, val_str_i) in line_r.unwrap().split("\t").zip(line_i.unwrap().split("\t")) {
+            if val_str_i.len() > 0 && val_str_r.len() > 0 {
+                U.push(Complex64::new(str::parse::<f64>(val_str_r).unwrap(), str::parse::<f64>(val_str_i).unwrap()));
+            }
+
+        }
+    }
+
+    U
+
+}
+
 
 pub fn csv_complex<P: AsRef<Path>>(path_r: P, path_i: P, n: usize, n_x: usize, n_y: usize,
                                    dim_x: f64, dim_y: f64, a: f64, b: f64, KK: &Vec<Complex64>) {
