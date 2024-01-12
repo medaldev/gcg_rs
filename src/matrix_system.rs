@@ -239,17 +239,3 @@ pub fn integral_col(flag: usize, num_x: usize, num_y: usize, dim_x: f64, dim_y: 
 
     ret
 }
-
-pub fn r_part_vych(point: usize, shift: f64, num_x: usize, num_y: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64, b: f64, k0: Complex64, N: usize, ip: usize, Bvych: &mut Vec<Complex64>) {
-    let mut xv = create_vector_memory(N, 0f64);
-    let mut yv = create_vector_memory(N, 0f64);
-    // let zv = vec![0f64; N];
-
-    fill_xyv(N, num_x, num_y, n_x, n_y, dim_x, dim_y, &mut xv, &mut yv, shift);
-
-
-    for i in 0..N {
-        Bvych[i] = fxy(xv[i], yv[i], 0.0, k0, dim_x, dim_y);
-    }
-}
-

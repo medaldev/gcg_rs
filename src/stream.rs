@@ -1,10 +1,12 @@
 use std::fs::File;
 use std::path::Path;
 use num::complex::{Complex64, ComplexFloat};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use crate::matrix_system::fill_xy_col;
 use crate::memory::create_vector_memory;
 
+use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
+use crate::common::{build_complex_vector, separate_re_im};
 
 pub fn write_complex_vector<P: AsRef<Path>>(U: &Vec<Complex64>, path1: P, path2: P, num_x: usize, num_y: usize, n_x: usize, n_y: usize) {
     let mut f1 = File::create(path1).unwrap();
@@ -71,6 +73,103 @@ pub fn write_complex_vector_r_i<P: AsRef<Path>>(U: &Vec<Complex64>, path1_r: P, 
     }
 
 }
+
+
+pub fn read_long_vector<P: AsRef<Path>>(path: P) -> Vec<f64> {
+
+    let mut vec = Vec::new();
+    let f1_buf_r = BufReader::new(File::open(path).unwrap());
+
+    for some_line in f1_buf_r.lines() {
+        let line = some_line.unwrap();
+        vec.push(str::parse::<f64>(line.as_str()).unwrap());
+    }
+
+    vec
+}
+
+pub fn write_complex_vec_to_binary<P: AsRef<Path>>(vec: &Vec<Complex64>, path_re: P, path_im: P) {
+    let (re_part, im_part) = separate_re_im(vec);
+    write_vec_to_binary_file(&re_part, path_re).unwrap();
+    write_vec_to_binary_file(&im_part, path_im).unwrap();
+}
+
+pub fn read_complex_vec_from_binary<P: AsRef<Path>>(path_re: P, path_im: P) -> Vec<Complex64> {
+    let re_part = read_vec_from_binary_file(path_re).unwrap();
+    let im_part = read_vec_from_binary_file(path_im).unwrap();
+
+    let n = re_part.len();
+    assert_eq!(n, im_part.len());
+
+    build_complex_vector(n, re_part, im_part)
+}
+
+pub fn write_vec_to_binary_file<P: AsRef<Path>>(vec: &Vec<f64>, filename: P) -> std::io::Result<()> {
+    let mut file = File::create(filename)?;
+
+    for &value in vec {
+        file.write_f64::<LittleEndian>(value)?;
+    }
+
+    Ok(())
+}
+
+pub fn read_vec_from_binary_file<P: AsRef<Path>>(filename: P) -> std::io::Result<Vec<f64>> {
+    let mut vec = Vec::new();
+    let mut file = File::open(filename)?;
+    let file_size = file.metadata()?.len();
+    let num_elements = file_size / std::mem::size_of::<f64>() as u64;
+
+    for _ in 0..num_elements {
+        let value = file.read_f64::<LittleEndian>()?;
+        vec.push(value);
+    }
+
+    Ok(vec)
+}
+
+// pub fn read_long_vector<P: AsRef<Path>>(U: &mut Vec<Complex64>, path1_r: P, path1_i: P, path2_r: P, path2_i: P,
+//                                            num_x: usize, num_y: usize, n_x: usize, n_y: usize) {
+//     let mut p = 0;
+//
+//     {
+//         let f1_buf_r = BufReader::new(File::open(path1_r).unwrap());
+//         let f1_buf_i = BufReader::new(File::open(path1_i).unwrap());
+//
+//
+//         for (_i2, (line_r, line_i)) in (0..num_y).into_iter().zip(f1_buf_r.lines().zip(f1_buf_i.lines())) {
+//             for (_i1, (val_str_r, val_str_i)) in (0..num_x).into_iter().zip(line_r.unwrap().split("\t").zip(line_i.unwrap().split("\t"))) {
+//                 U[p] = Complex64::new(str::parse::<f64>(val_str_r).unwrap(), str::parse::<f64>(val_str_i).unwrap());
+//                 p += 1;
+//             }
+//         }
+//     }
+//
+
+
+
+// pub fn read_binary_file<P: AsRef<Path>>(path: P, n: usize) -> Vec<Complex64> {
+//     let mut reader = BufReader::new(
+//         File::open(path)
+//             .expect("Failed to open file")
+//     );
+//
+//     let mut vec = Vec::new();
+//     let mut buffer = [0u8; std::mem::size_of::<f64>()];
+//
+//     loop {
+//         reader.read_exact(&mut buffer).expect("Unexpected error during read");
+//         let real = f64::from_le_bytes(buffer);
+//
+//         reader.read_exact(&mut buffer).expect("Unexpected error during read");
+//         let imag = f64::from_le_bytes(buffer);
+//
+//         let complex = Complex64::new(real, imag);
+//         vec.push(complex);
+//     }
+//     vec
+//
+// }
 
 pub fn read_complex_vector<P: AsRef<Path>>(U: &mut Vec<Complex64>, path1_r: P, path1_i: P, path2_r: P, path2_i: P,
                                            num_x: usize, num_y: usize, n_x: usize, n_y: usize) {

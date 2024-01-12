@@ -1,6 +1,6 @@
 use num::complex::Complex64;
 use num::Zero;
-use crate::consts::{A, B, DIM_X, DIM_Y, K1, N, N1, N_X, N_Y, NUM_X, NUM_Y, point};
+use crate::consts::{A, B, DIM_X, DIM_Y, K1, N, N1, N_X, N_Y, NUM_X, NUM_Y, POINT};
 use crate::matrix_system::fill_xy_col;
 use crate::memory::create_vector_memory;
 
@@ -92,7 +92,7 @@ pub fn initial_k0(n: usize, K: &mut [Complex64], W: &mut [Complex64]) {
             p4 = p1 + N_X + 1;
 
             s = K[p1] + K[p2] + K[p3] + K[p4];
-            K[ind] = s / (point * point) as f64;
+            K[ind] = s / (POINT * POINT) as f64;
 
             ind += 1;
 

@@ -220,6 +220,7 @@ name = "gcg_nrs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "byteorder",
  "num",
  "pbr",
  "rand",

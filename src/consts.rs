@@ -1,14 +1,14 @@
 use num::complex::Complex64;
 pub use std::f64::consts::PI;
 
-pub const p: usize = 30;
-pub const point: usize = 2;
+pub const P: usize = 20;
+pub const POINT: usize = 2;
 
-pub const NUM_X: usize = p;
-pub const NUM_Y: usize = p;
+pub const NUM_X: usize = P;
+pub const NUM_Y: usize = P;
 
-pub const N_X: usize = NUM_X * point;
-pub const N_Y: usize = NUM_Y * point;
+pub const N_X: usize = NUM_X * POINT;
+pub const N_Y: usize = NUM_Y * POINT;
 
 pub const N1: usize = NUM_X * NUM_Y;
 pub const N2: usize = N_X * N_Y;
@@ -37,7 +37,7 @@ pub const DIM_Y: f64 = 0.15;
 pub const A: f64 = -DIM_X / 2.0;
 pub const B: f64 = -DIM_Y / 2.0;
 
-pub const shift: f64 = DIM_X / 2.0;
+pub const SHIFT: f64 = DIM_X / 2.0;
 
 pub const ALPHA: f64 = 0.01;
 
