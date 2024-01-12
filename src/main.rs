@@ -21,7 +21,7 @@ use rand::distributions::{Distribution, Uniform};
 use consts::*;
 use memory::*;
 use matrix_system::{fill_xy_col};
-use crate::common::{build_complex_vector, separate_by_grids, separate_re_im, union_grids};
+use crate::common::{build_complex_vector, separate_re_im};
 use crate::direct_problem::direct_problem;
 use crate::initial::initial_k0;
 use crate::inverse_problem::inverse_p;
@@ -68,7 +68,7 @@ fn main() {
 
     println!("N = {}", N);
 
-    println!("lambda = {} {}", (2.0*PI / K0).abs(), DIM_X / NUM_X as f64);
+    println!("lambda = {} {}", (2.0*PI / K0).abs(), DIM_X / N_X as f64);
     println!("K0 = {:?}", K0);
     println!("Frequency = {:?}", HZ);
 
@@ -88,24 +88,21 @@ fn main() {
     }
 
     if load_init_k_from_files {
-        read_complex_vector(&mut K, "./input/K1_r.xls", "./input/K1_i.xls",
-                            "./input/K2_r.xls", "./input/K2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        read_complex_vector(&mut K, "./input/K2_r.xls", "./input/K2_i.xls", N_X, N_Y);
         println!("K was loaded from external files.");
     }
 
     // Вывод начальных значений K
-    write_complex_vector(&K, "./output/K.xls","./output/KK.xls", NUM_X, NUM_Y, N_X, N_Y);
-    write_complex_vector_r_i(&K, "./output/K1_r.xls","./output/K1_i.xls",
-                             "./output/K2_r.xls","./output/K2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-    csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, NUM_X, NUM_Y,
-                N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+    write_complex_vector(&K, "./output/KK.xls", N_X, N_Y);
+    write_complex_vector_r_i(&K, "./output/K2_r.xls","./output/K2_i.xls", N_X, N_Y);
+    csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Решение прямой задачи
     if solve_direct {
         let mut start_time = Instant::now();
         println!("\n******************************DIRECT_PROBLEM******************************");
-        direct_problem(N, NUM_X, NUM_Y, N_X, N_Y, IP1, IP2, &mut W, &mut K, &mut J);
+        direct_problem(N, N_X, N_Y, IP1, IP2, &mut W, &mut K, &mut J);
 
         println!(">> Direct problem time: {:?} seconds", start_time.elapsed().as_secs());
     }
@@ -124,30 +121,23 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     // Сохранение результатов решения прямой задачи
 
-    csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, NUM_X, NUM_Y,
-                N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
-    csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, NUM_X, NUM_Y,
-                N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+    csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+    csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
     //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-    write_complex_vector_r_i(&J, "./output/J1_dir_r.xls","./output/J1_dir_i.xls",
-                             "./output/J2_dir_r.xls","./output/J2_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+    write_complex_vector_r_i(&J,"./output/J2_dir_r.xls","./output/J2_dir_i.xls", N_X, N_Y);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Внесение шума в J
     if add_noise_j {
         add_noise(&mut J, pct_noise);
         println!("Noise {} added to J.", pct_noise);
+
+        // Запись зашумлённых данных
+
+        csv_complex("./output/J_dir_r_noised.csv", "./output/J_dir_i_noised.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+        //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&J, "./output/J2_dir_r_noised.xls","./output/J2_dir_i_noised.xls", N_X, N_Y);
     }
-
-
-    // ----------------------------------------------------------------------------------------------------------------
-    // Запись зашумлённых данных
-
-    csv_complex("./output/J_dir_r_noised.csv", "./output/J_dir_i_noised.csv",  N, NUM_X, NUM_Y,
-                N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
-    //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-    write_complex_vector_r_i(&J, "./output/J1_dir_r_noised.xls","./output/J1_dir_i_noised.xls",
-                             "./output/J2_dir_r_noised.xls","./output/J2_dir_i_noised.xls", NUM_X, NUM_Y, N_X, N_Y);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Подавление шума с помощью нейронной сети
@@ -174,8 +164,7 @@ fn main() {
         }
 
 
-        read_complex_vector(&mut J, "./output/J1_dir_r_denoised.xls", "./output/J1_dir_i_denoised.xls",
-                            "./output/J2_dir_r_denoised.xls", "./output/J2_dir_i_denoised.xls", NUM_X, NUM_Y, N_X, N_Y);
+        read_complex_vector(&mut J, "./output/J2_dir_r_denoised.xls", "./output/J2_dir_i_denoised.xls", N_X, N_Y);
 
         //----------------------------------------------------------------------------------------------------------------
 
@@ -188,35 +177,22 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     if vych_calc {
         // Расчёт поля в точках наблюдения
-        vych::r_part_vych(POINT, SHIFT, NUM_X, NUM_Y, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
+        vych::r_part_vych(POINT, SHIFT, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
         vych::get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
     }
 
     // Загрузка Uvych из файлов
     if load_uvych_from_files {
-        // let uvych_re = read_long_vector("./input/Uvych_re.xls");
-        // let uvych_im = read_long_vector("./input/Uvych_im.xls");
-        //
-        // Uvych = build_complex_vector(N, uvych_re, uvych_im);
 
-        let (Uvych1_read, Uvych2_read) = (
-            read_complex_vec_from_binary("./output/Uvych1_r", "./output/Uvych1_i"),
-            read_complex_vec_from_binary("./output/Uvych2_r", "./output/Uvych2_i"));
-
-        Uvych = union_grids(&Uvych1_read, &Uvych2_read, NUM_X, NUM_Y, N_X, N_Y);
+        Uvych = read_complex_vec_from_binary("./output/Uvych_r", "./output/Uvych_i");
 
         println!("Uvych was loaded from external files.");
     }
 
     {
         // Сохранение Uvych
-        write_complex_vector_r_i(&Uvych, "./output/Uvych1_r.xls","./output/Uvych1_i.xls",
-                             "./output/Uvych2_r.xls","./output/Uvych2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-
-        let (Uvych1, Uvych2) = separate_by_grids(&Uvych, NUM_X, NUM_Y, N_X, N_Y);
-
-        write_complex_vec_to_binary(&Uvych1, "./output/Uvych1_r", "./output/Uvych1_i");
-        write_complex_vec_to_binary(&Uvych2, "./output/Uvych2_r", "./output/Uvych2_i");
+        write_complex_vector_r_i(&Uvych, "./output/Uvych_r.xls","./output/Uvych_i.xls", N_X, N_Y);
+        write_complex_vec_to_binary(&Uvych, "./output/Uvych_r", "./output/Uvych_i");
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -227,15 +203,12 @@ fn main() {
         println!(">> Inverse problem time: {:?} seconds", start_time.elapsed().as_secs());
 
         // ----------------------------------------------------------------------------------------------------------------
-        write_complex_vector(&K_inv, "./output/K_inv.xls", "./output/KK_inv.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector(&K_inv, "./output/KK_inv.xls", N_X, N_Y);
 
-        write_complex_vector_r_i(&K_inv, "./output/K_inv1_r.xls","./output/K_inv1_i.xls",
-                                 "./output/K_inv2_r.xls","./output/K_inv2_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&K_inv, "./output/K_inv2_r.xls","./output/K_inv2_i.xls", N_X, N_Y);
 
-        csv_complex("./output/K_inv_r.csv", "./output/K_inv_i.csv",  N, NUM_X, NUM_Y,
-                    N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
-        csv_complex("./output/J_inv_r.csv", "./output/J_inv_i.csv",  N, NUM_X, NUM_Y,
-                    N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
+        csv_complex("./output/K_inv_r.csv", "./output/K_inv_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
+        csv_complex("./output/J_inv_r.csv", "./output/J_inv_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
 
     }
 

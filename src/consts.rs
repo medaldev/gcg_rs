@@ -4,15 +4,10 @@ pub use std::f64::consts::PI;
 pub const P: usize = 20;
 pub const POINT: usize = 2;
 
-pub const NUM_X: usize = P;
-pub const NUM_Y: usize = P;
+pub const N_X: usize = P * POINT;
+pub const N_Y: usize = P * POINT;
 
-pub const N_X: usize = NUM_X * POINT;
-pub const N_Y: usize = NUM_Y * POINT;
-
-pub const N1: usize = NUM_X * NUM_Y;
-pub const N2: usize = N_X * N_Y;
-pub const N: usize = N1 + N2;
+pub const N: usize = N_X * N_Y;
 
 pub const IP1: usize = 3;
 pub const IP2: usize = 3;

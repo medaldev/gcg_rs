@@ -7,7 +7,7 @@ use crate::memory::{create_matrix_memory, create_vector_memory};
 
 pub fn direct_problem
 (
-    n: usize, num_x: usize, num_y: usize, n_x: usize, n_y: usize, ip1: usize, ip2: usize,
+    n: usize, n_x: usize, n_y: usize, ip1: usize, ip2: usize,
     W: &mut Vec<Complex64>, K: &mut Vec<Complex64>, J: &mut Vec<Complex64>,
 )
 {
@@ -15,9 +15,9 @@ pub fn direct_problem
     let mut BB = create_vector_memory(n, Complex64::zero());
 
 
-    rpart_col(n, num_x, num_y, n_x, n_y, DIM_X, DIM_Y, A, B, K0, ip1, ip2, &mut BB);
+    rpart_col(n, n_x, n_y, DIM_X, DIM_Y, A, B, K0, ip1, ip2, &mut BB);
 
-    calculate_matrix_col(POINT, num_x, num_y, n_x, n_y, K, DIM_X, DIM_Y, A, B, n, ip1, ip2, &mut AA, K0);
+    calculate_matrix_col(POINT, n_x, n_y, K, DIM_X, DIM_Y, A, B, n, ip1, ip2, &mut AA, K0);
     build_matrix(n, &mut AA, W, &mut BB);
 
     for i in 0..n {
