@@ -33,16 +33,16 @@ use crate::stream::{csv_complex, read_complex_vec_from_binary, read_complex_vect
 fn main() {
 
     // Задание начальных значений K
-    let use_initial_k = false;
+    let use_initial_k = true;
 
     // Загрузка K из файлов
     let load_init_k_from_files = false;
 
     // Решить прямую задачу
-    let solve_direct = false;
+    let solve_direct = true;
 
     // Загрузка J из файлов
-    let load_j_from_files = true;
+    let load_j_from_files = false;
 
     // Внесение шума в J
     let add_noise_j = false;
@@ -88,6 +88,7 @@ fn main() {
     }
 
     if load_init_k_from_files {
+        // Загрузка K из xls файлов
         read_complex_vector(&mut K, "./input/K2_r.xls", "./input/K2_i.xls", N_X, N_Y);
         println!("K was loaded from external files.");
     }
@@ -98,8 +99,8 @@ fn main() {
     csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Решение прямой задачи
     if solve_direct {
+        // Решение прямой задачи
         let mut start_time = Instant::now();
         println!("\n******************************DIRECT_PROBLEM******************************");
         direct_problem(N, N_X, N_Y, IP1, IP2, &mut W, &mut K, &mut J);
@@ -108,8 +109,9 @@ fn main() {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Загрузка J из xls файлов
     if load_j_from_files {
+        // Загрузка J из xls файлов
+
         // let j_re = read_long_vector("./input/J_re.xls");
         // let j_im = read_long_vector("./input/J_im.xls");
         // let j_loaded = build_complex_vector(N, j_re, j_im);
@@ -123,30 +125,29 @@ fn main() {
 
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Сохранение результатов решения прямой задачи
-
-    csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
-    csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
-    //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-    write_complex_vector_r_i(&J,"./output/J2_dir_r.xls","./output/J2_dir_i.xls", N_X, N_Y);
+    {
+        // Сохранение результатов решения прямой задачи
+        csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+        csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+        //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&J,"./output/J2_dir_r.xls","./output/J2_dir_i.xls", N_X, N_Y);
+    }
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Внесение шума в J
     if add_noise_j {
+        // Внесение шума в J
         add_noise(&mut J, pct_noise);
         println!("Noise {} added to J.", pct_noise);
 
         // Запись зашумлённых данных
-
         csv_complex("./output/J_dir_r_noised.csv", "./output/J_dir_i_noised.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
         //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
         write_complex_vector_r_i(&J, "./output/J2_dir_r_noised.xls","./output/J2_dir_i_noised.xls", N_X, N_Y);
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Подавление шума с помощью нейронной сети
-
     if neuro_use {
+        // Подавление шума с помощью нейронной сети
         let start_time = Instant::now();
 
         println!("Using neural network model to denoise J.");
@@ -183,7 +184,7 @@ fn main() {
         // Расчёт поля в точках наблюдения
         vych::r_part_vych(POINT, SHIFT, N_X, N_Y, DIM_X, DIM_Y, A, B, K0, N, IP1, &mut Bvych);
         vych::get_uvych(N, IP1, DIM_X, DIM_Y, &J, &mut Uvych, &Bvych, K0);
-        println!("Uvych were calculated.");
+        println!("Uvych was calculated.");
     }
 
     // Загрузка Uvych из файлов

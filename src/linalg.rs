@@ -69,7 +69,7 @@ pub fn min_max_f64_vec(vec: &Vec<f64>) -> (f64, f64) {
 
 
 
-pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
+pub fn gauss2(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {
     let mut pb = ProgressBar::new(n as u64);
     pb.set_width(Some(75));
     let mut AA = A.clone();
@@ -138,42 +138,62 @@ pub fn gauss(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, W: &Vec<Comp
 
 }
 
-// pub fn gauss_parallel(n: usize, A: &Vec<Vec<Complex64>>, B: &Vec<Complex64>, U: &mut Vec<Complex64>) -> Complex64 {}
+
+type Matrix = Vec<Vec<Complex64>>;
+pub fn gauss(n: usize, A: &Matrix, B: &Vec<Complex64>,W: &Vec<Complex64>, U: &mut Vec<Complex64>)  {
+    println!("Use Gauss elimination parallel.");
+    let mut AA = A.clone();
+    for (row, el) in AA.iter_mut().zip(B.iter()) {
+        row.push(el.clone());
+    }
+    gaussian_elimination(&mut AA);
+    back_substitution(&mut AA,  U)
+}
 
 
-// fn pivot(n: usize, A: &mut Vec<Vec<Complex64>>, B: &mut Vec<Complex64>, i: usize) {
-//     let mut max = 0.0;
-//     let mut row = i;
-//
-//     // Find the row with the largest absolute value in column i
-//     for r in i..n {
-//         let val = A[r][i].abs();
-//         if val > max {
-//             max = val;
-//             row = r;
-//         }
-//     }
-//
-//     // Swap rows i and row
-//     if i != row {
-//         A.swap(i, row);
-//         B.swap(i, row);
-//     }
-// }
-//
-// pub fn compute_gauss(n: usize, A: &mut Vec<Vec<Complex64>>, B: &mut Vec<Complex64>) {
-//     for i in 0..n {
-//         pivot(n, A, B, i);
-//
-//         let (row_i, rows) = A[i..n].split_first_mut().unwrap();
-//
-//         rows.par_iter_mut().enumerate().for_each(|(j, row_j)| {
-//             let pivot_val = row_j[i];
-//             row_j[i] = Complex64::zero();
-//             for k in i + 1..n {
-//                 row_j[k] -= pivot_val * row_i[k];
-//             }
-//             B[j] -= pivot_val * B[i];
-//         });
-//     }
-// }
+fn gaussian_elimination(matrix: &mut Matrix)  {
+
+    let n = matrix.len();
+
+    let mut pb = ProgressBar::new(n as u64);
+    pb.set_width(Some(75));
+
+    for i in 0..n {
+        pb.inc();
+        // Find the pivot for column i
+        let max = (i..n).max_by(|&x, &y| matrix[x][i].norm().partial_cmp(&matrix[y][i].norm()).unwrap()).unwrap();
+
+
+        // Swap the rows if necessary
+        matrix.swap(i, max);
+
+        // Clone the pivot row elements that will be used in the elimination process.
+        let pivot_row: Vec<Complex64> = matrix[i][i..].to_vec();
+
+        matrix.par_iter_mut().enumerate().skip(i + 1).for_each(|(j, row)| {
+            if j > i {
+                let factor = row[i] / pivot_row[0];
+                row.iter_mut().enumerate().skip(i).for_each(|(k, value)| {
+                    if k >= i {
+                        *value -= factor * pivot_row[k - i];
+                    }
+                });
+            }
+        });
+    }
+    pb.finish_println("");
+
+}
+
+fn back_substitution(matrix: &mut Matrix,  U: &mut Vec<Complex64>) {
+    let n = matrix.len();
+
+    for i in (0..n).rev() {
+        U[i] = matrix[i][n] / matrix[i][i];
+        for k in 0..i {
+            let u =  matrix[k][i];
+            matrix[k][n] -=  u * U[i];
+        }
+    }
+
+}
