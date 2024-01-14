@@ -3,7 +3,41 @@ use std::path::Path;
 use num::{Complex, Zero};
 use num::complex::Complex64;
 use num::integer::Roots;
+use rand::distributions::Uniform;
+use rand::prelude::Distribution;
+use crate::linalg::min_max_f64_vec;
 use crate::memory::create_vector_memory;
+
+
+
+pub fn add_noise(U: &mut Vec<Complex64>, pct: f64) {
+    let rngs = {
+        let (re, im) = separate_re_im(&U);
+        (min_max_f64_vec(&re), min_max_f64_vec(&im))
+    };
+    let max_noise_val_re = (rngs.0.1 - rngs.0.0) * pct;
+    let max_noise_val_im = (rngs.1.1 - rngs.1.0) * pct;
+
+    let mut rng = rand::thread_rng();
+    let re_noise = Uniform::from(0.0..max_noise_val_re);
+    let im_noise = Uniform::from(0.0..max_noise_val_im);
+
+    for num in U {
+        *num += Complex64::new(re_noise.sample(&mut rng), im_noise.sample(&mut rng));
+    }
+}
+
+
+pub fn kerr(n: usize, alpha: f64, k1_: Complex64, U: &[Complex64], K: &mut [Complex64], W: &[Complex64]) {
+    for p1 in 0..n {
+        K[p1] = (k1_ + alpha *U[p1].norm()*U[p1]).norm()*W[p1];
+    }
+}
+
+pub fn get_geometry(n: usize, W: &[Complex64]) {
+
+}
+
 
 pub fn separate_re_im(U: &Vec<Complex64>) -> (Vec<f64>, Vec<f64>){
     let n = U.len();
