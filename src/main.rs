@@ -13,6 +13,7 @@ mod neuro;
 mod vych;
 mod common;
 
+use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 use std::time::Instant;
 use num::complex::{Complex64, ComplexFloat};
@@ -36,10 +37,10 @@ fn main() {
     let use_initial_k = true;
 
     // Загрузка K из файлов
-    let load_init_k_from_files = false;
+    let load_init_k_w_from_files = false;
 
     // Решить прямую задачу
-    let solve_direct = true;
+    let solve_direct = false;
 
     // Загрузка J из файлов
     let load_j_from_files = false;
@@ -52,13 +53,17 @@ fn main() {
     let neuro_use = false;
 
     // Расчёт поля в точках наблюдения
-    let vych_calc = true;
+    let vych_calc = false;
 
     // Загрузка Uvych из файлов
-    let load_uvych_from_files = false;
+    let load_uvych_from_files = true;
 
     // Решить обратную задачу
     let solve_inverse = true;
+
+    // Пути к файлам
+    let input_dir = Path::new("./input");
+    let output_dir = Path::new("./output");
 
     // ---------------------------------------------------------------------------------------------------------------
 
@@ -85,18 +90,20 @@ fn main() {
         // Задание начальных значений K
         initial_k0(N, &mut K, &mut W);
         println!("K was initialised from initial_k0 function.");
+        write_complex_vector(&W, output_dir.join("WW.xls"), N_X, N_Y);
     }
 
-    if load_init_k_from_files {
-        // Загрузка K из xls файлов
-        read_complex_vector(&mut K, "./input/K2_r.xls", "./input/K2_i.xls", N_X, N_Y);
-        println!("K was loaded from external files.");
+    if load_init_k_w_from_files {
+        // Загрузка K и W из xls файлов
+        read_complex_vector(&mut K, input_dir.join("K_r.xls"), input_dir.join("K_i.xls"), N_X, N_Y);
+        read_complex_vector(&mut W, input_dir.join("W_r.xls"), input_dir.join("W_i.xls"), N_X, N_Y);
+        println!("K and W were loaded from external files.");
     }
 
     // Вывод начальных значений K
-    write_complex_vector(&K, "./output/KK.xls", N_X, N_Y);
-    write_complex_vector_r_i(&K, "./output/K2_r.xls","./output/K2_i.xls", N_X, N_Y);
-    csv_complex("./output/K_init_r.csv", "./output/K_init_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+    write_complex_vector(&K, output_dir.join("K.xls"), N_X, N_Y);
+    write_complex_vector_r_i(&K, output_dir.join("K_r.xls"), output_dir.join("K_i.xls"), N_X, N_Y);
+    csv_complex(output_dir.join("K_init_r.csv"), output_dir.join("K_init_i.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
 
     // ----------------------------------------------------------------------------------------------------------------
     if solve_direct {
@@ -112,13 +119,13 @@ fn main() {
     if load_j_from_files {
         // Загрузка J из xls файлов
 
-        // let j_re = read_long_vector("./input/J_re.xls");
-        // let j_im = read_long_vector("./input/J_im.xls");
+        // let j_re = read_long_vector(input_dir.join("J_re.xls");
+        // let j_im = read_long_vector(input_dir.join("J_im.xls");
         // let j_loaded = build_complex_vector(N, j_re, j_im);
         // assert_eq!(J.len(), j_loaded.len());
         //J = j_loaded;
 
-        read_complex_vector(&mut J, "./input/J_re.xls", "./input/J_im.xls", N_X, N_Y);
+        read_complex_vector(&mut J, input_dir.join("J_re.xls"), input_dir.join("J_im.xls"), N_X, N_Y);
 
         println!("J was loaded from external files.");
     }
@@ -127,10 +134,10 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     {
         // Сохранение результатов решения прямой задачи
-        csv_complex("./output/K_dir_r.csv", "./output/K_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
-        csv_complex("./output/J_dir_r.csv", "./output/J_dir_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
-        //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-        write_complex_vector_r_i(&J,"./output/J2_dir_r.xls","./output/J2_dir_i.xls", N_X, N_Y);
+        csv_complex(output_dir.join("K_dir_r.csv"), output_dir.join("K_dir_i.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K);
+        csv_complex(output_dir.join("J_dir_r.csv"), output_dir.join("J_dir_i.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+        //write_complex_vector(&J, output_dir.join("J_dir_r.xls",output_dir.join("J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&J,output_dir.join("J_dir_r.xls") ,output_dir.join("J_dir_i.xls"), N_X, N_Y);
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -140,9 +147,9 @@ fn main() {
         println!("Noise {} added to J.", pct_noise);
 
         // Запись зашумлённых данных
-        csv_complex("./output/J_dir_r_noised.csv", "./output/J_dir_i_noised.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
-        //write_complex_vector(&J, "./output/J_dir_r.xls","./output/J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
-        write_complex_vector_r_i(&J, "./output/J2_dir_r_noised.xls","./output/J2_dir_i_noised.xls", N_X, N_Y);
+        csv_complex(output_dir.join("J_dir_r_noised.csv"), output_dir.join("J_dir_i_noised.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+        //write_complex_vector(&J, output_dir.join("J_dir_r.xls",output_dir.join("J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&J, output_dir.join("J_dir_r_noised.xls") ,output_dir.join("J_dir_i_noised.xls"), N_X, N_Y);
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -153,23 +160,15 @@ fn main() {
         println!("Using neural network model to denoise J.");
 
         {
-            let j1_denoised_re = neuro::run("./output/J1_dir_r.xls", MODEL,
-                                            "./output/J1_dir_r_denoised.xls", true).unwrap().concat();
-            let j1_denoised_im = neuro::run("./output/J1_dir_i.xls", MODEL,
-                                            "./output/J1_dir_i_denoised.xls", true).unwrap().concat();
-            // let J1 = build_complex_vector(N, j1_denoised_re, j1_denoised_im);
-        }
-
-        {
-            let j2_denoised_re = neuro::run("./output/J2_dir_r.xls", MODEL,
-                                            "./output/J2_dir_r_denoised.xls", true).unwrap().concat();
-            let j2_denoised_im = neuro::run("./output/J2_dir_i.xls", MODEL,
-                                            "./output/J2_dir_i_denoised.xls", true).unwrap().concat();
+            let j2_denoised_re = neuro::run(output_dir.join("J_dir_r.xls"), PathBuf::from(MODEL),
+                                            output_dir.join("J_dir_r_denoised.xls"), true).unwrap().concat();
+            let j2_denoised_im = neuro::run(output_dir.join("J_dir_i.xls"), PathBuf::from(MODEL),
+                                            output_dir.join("J_dir_i_denoised.xls"), true).unwrap().concat();
             // let J2 = build_complex_vector(N, j2_denoised_re, j2_denoised_im);
         }
 
 
-        read_complex_vector(&mut J, "./output/J2_dir_r_denoised.xls", "./output/J2_dir_i_denoised.xls", N_X, N_Y);
+        read_complex_vector(&mut J, output_dir.join("J_dir_r_denoised.xls"), output_dir.join("J_dir_i_denoised.xls"), N_X, N_Y);
 
         //----------------------------------------------------------------------------------------------------------------
 
@@ -190,7 +189,7 @@ fn main() {
     // Загрузка Uvych из файлов
     if load_uvych_from_files {
 
-        let Uvych_readed = read_complex_vec_from_binary("./input/Uvych_r", "./input/Uvych_i");
+        let Uvych_readed = read_complex_vec_from_binary(input_dir.join("Uvych_r"), input_dir.join("Uvych_i"));
         assert_eq!(Uvych.len(), Uvych_readed.len());
         Uvych = Uvych_readed;
 
@@ -199,8 +198,8 @@ fn main() {
 
     {
         // Сохранение Uvych
-        write_complex_vector_r_i(&Uvych, "./output/Uvych_r.xls","./output/Uvych_i.xls", N_X, N_Y);
-        write_complex_vec_to_binary(&Uvych, "./output/Uvych_r", "./output/Uvych_i");
+        write_complex_vector_r_i(&Uvych, output_dir.join("Uvych_r.xls") ,output_dir.join("Uvych_i.xls") , N_X, N_Y);
+        write_complex_vec_to_binary(&Uvych, output_dir.join("Uvych_r") , output_dir.join("Uvych_i"));
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -211,12 +210,12 @@ fn main() {
         println!(">> Inverse problem time: {:?} seconds", start_time.elapsed().as_secs());
 
         // ----------------------------------------------------------------------------------------------------------------
-        write_complex_vector(&K_inv, "./output/KK_inv.xls", N_X, N_Y);
+        write_complex_vector(&K_inv, output_dir.join("K_inv.xls"), N_X, N_Y);
 
-        write_complex_vector_r_i(&K_inv, "./output/K_inv2_r.xls","./output/K_inv2_i.xls", N_X, N_Y);
+        write_complex_vector_r_i(&K_inv, output_dir.join("K_inv_r.xls") ,output_dir.join("K_inv_i.xls"), N_X, N_Y);
 
-        csv_complex("./output/K_inv_r.csv", "./output/K_inv_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
-        csv_complex("./output/J_inv_r.csv", "./output/J_inv_i.csv",  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
+        csv_complex(output_dir.join("K_inv_r.csv"), output_dir.join("K_inv_i.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &K_inv);
+        csv_complex(output_dir.join("J_inv_r.csv"), output_dir.join("J_inv_i.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J_inv);
 
     }
 
