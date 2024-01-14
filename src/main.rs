@@ -40,23 +40,27 @@ fn main() {
     let load_init_k_w_from_files = false;
 
     // Решить прямую задачу
-    let solve_direct = false;
+    let solve_direct = true;
 
     // Загрузка J из файлов
     let load_j_from_files = false;
 
     // Внесение шума в J
     let add_noise_j = false;
-    let pct_noise = 0.5;
+    let pct_noise_j = 0.5;
 
     // Использовать нейросеть для очистки J
     let neuro_use = false;
 
     // Расчёт поля в точках наблюдения
-    let vych_calc = false;
+    let vych_calc = true;
 
     // Загрузка Uvych из файлов
-    let load_uvych_from_files = true;
+    let load_uvych_from_files = false;
+
+    // Внесение шума в Uvych
+    let add_noise_uvych = false;
+    let pct_noise_uvych = 0.00000000001;
 
     // Решить обратную задачу
     let solve_inverse = true;
@@ -143,8 +147,8 @@ fn main() {
     // ----------------------------------------------------------------------------------------------------------------
     if add_noise_j {
         // Внесение шума в J
-        add_noise(&mut J, pct_noise);
-        println!("Noise {} added to J.", pct_noise);
+        add_noise(&mut J, pct_noise_j);
+        println!("Noise {} added to J.", pct_noise_j);
 
         // Запись зашумлённых данных
         csv_complex(output_dir.join("J_dir_r_noised.csv"), output_dir.join("J_dir_i_noised.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
@@ -194,6 +198,17 @@ fn main() {
         Uvych = Uvych_readed;
 
         println!("Uvych was loaded from external files.");
+    }
+
+    if add_noise_uvych {
+        // Внесение шума в Uvych
+        add_noise(&mut Uvych, pct_noise_uvych);
+        println!("Noise {} added to Uvych.", pct_noise_uvych);
+
+        // Запись зашумлённых данных
+        csv_complex(output_dir.join("J_dir_r_noised.csv"), output_dir.join("J_dir_i_noised.csv"),  N, N_X, N_Y, DIM_X, DIM_Y, A, B, &J);
+        //write_complex_vector(&J, output_dir.join("J_dir_r.xls",output_dir.join("J_dir_i.xls", NUM_X, NUM_Y, N_X, N_Y);
+        write_complex_vector_r_i(&J, output_dir.join("J_dir_r_noised.xls") ,output_dir.join("J_dir_i_noised.xls"), N_X, N_Y);
     }
 
     {
