@@ -1,38 +1,23 @@
-// #![feature(generic_const_exprs)]
-// #![feature(const_trait_impl)]
-
-pub mod stream;
-pub mod consts;
-mod matrix_system;
-mod linalg;
-mod memory;
-mod direct_problem;
-mod inverse_problem;
-mod initial;
-mod neuro;
-mod vych;
-mod common;
-
-
-use std::path::{Path, PathBuf};
-use std::time::Instant;
-use consts::*;
+use std::path::PathBuf;
 use gcg2d::solvers::{solve, TaskParams};
 
 
 fn main() {
+    /*
 
-    // ---------------------------------------------------------------------------------------------------------------
+        cargo run --example reduce_binary ./experiments/output50_2/Uvych_r  ./experiments/output50_2/Uvych_i ./input/Uvych_r ./input/Uvych_i 2
+
+    */
 
     let mut task = TaskParams {
         // Задание начальных значений K
         use_initial_k: false,
 
         // Загрузка K из файлов
-        load_init_k_w_from_files: true,
+        load_init_k_w_from_files: false,
 
         // Решить прямую задачу
-        solve_direct: true,
+        solve_direct: false,
 
         // Загрузка J из файлов
         load_j_from_files: false,
@@ -45,10 +30,10 @@ fn main() {
         neuro_use: false,
 
         // Расчёт поля в точках наблюдения
-        vych_calc: true,
+        vych_calc: false,
 
         // Загрузка Uvych из файлов
-        load_uvych_from_files: false,
+        load_uvych_from_files: true,
 
         // Внесение шума в Uvych
         add_noise_uvych: false,
@@ -64,5 +49,3 @@ fn main() {
 
     solve(&task);
 }
-
-

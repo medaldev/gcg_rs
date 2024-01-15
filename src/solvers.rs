@@ -30,7 +30,7 @@ pub struct TaskParams {
     pub output_dir: PathBuf,
 }
 
-pub fn solve(p: TaskParams)
+pub fn solve(p: &TaskParams)
 
 {
     let global_start_time = Instant::now();
@@ -65,6 +65,8 @@ pub fn solve(p: TaskParams)
         read_complex_vector(&mut W, p.input_dir.join("W_r.xls"), p.input_dir.join("W_i.xls"), N_X, N_Y);
         println!("K and W were loaded from external files.");
     }
+
+    write_complex_vector(&W, p.output_dir.join("W.xls"), N_X, N_Y);
 
     // Вывод начальных значений K
     write_complex_vector(&K, p.output_dir.join("K.xls"), N_X, N_Y);
