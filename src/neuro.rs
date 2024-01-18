@@ -1,17 +1,15 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
+use num::complex::Complex64;
 use tch::{Device, IndexOp, Kind, Tensor};
 use tch::utils::has_cuda;
+use crate::common::{build_complex_vector, get_vec_im, get_vec_re, vec_to_matrix};
 use crate::linalg::min_max_f64_vec;
+use crate::neuro;
 
 
-fn main() {
-    let sv = run("./output/K_inv.xls", "./models/traced_model_9.pt",
-                 "./output/K_inv_denoised.xls", true).unwrap().concat();
-}
-
-pub fn run<P: AsRef<Path>>(data_path: P, model_path: P, save_res_xls: P, with_rescale: bool) -> anyhow::Result<Vec<Vec<f64>>> {
+pub fn run_from_file(data_path: &Path, model_path: &Path, save_res_xls: &Path, with_rescale: bool) -> anyhow::Result<Vec<Vec<f64>>> {
 
     let device = get_device();
     let kind = Kind::Float;
@@ -40,6 +38,43 @@ pub fn run<P: AsRef<Path>>(data_path: P, model_path: P, save_res_xls: P, with_re
     matrix_to_file(&res, save_res_xls).unwrap();
 
     Ok(res)
+}
+
+pub fn run_re(mut arr: Vec<Vec<f64>>, model_path: &Path, with_rescale: bool) -> anyhow::Result<Vec<Vec<f64>>> {
+
+    let device = get_device();
+    let kind = Kind::Float;
+
+    let (height, width) = (arr.len() as i64, arr[0].len() as i64);
+
+    let source_rng = min_max_f64_vec(&arr.concat());
+    if with_rescale {
+        rescale_matrix(&mut arr, (0., 1.));
+    }
+
+    let tensor: Tensor = Tensor::from_slice(&arr.concat()).reshape(&[1, 1, height, width]).to_kind(kind).to_device(device);
+
+    let mut model = tch::CModule::load(model_path)?;
+    model.to(device, kind, true);
+
+    let output = model.forward_ts(&[&tensor])?;
+
+    let mut res = tensor_to_matrix(output, height, width);
+    if with_rescale {
+        rescale_matrix(&mut res, source_rng);
+    }
+
+    Ok(res)
+}
+
+pub fn run_im(arr: &Vec<Complex64>, n: usize, n_x: usize, n_y: usize, model_path: &Path, with_rescale: bool) -> anyhow::Result<Vec<Complex64>> {
+    let k_inv_denoised_r = run_re(vec_to_matrix(&get_vec_re(&arr), n_x, n_y),
+                                      model_path, with_rescale)?.concat();
+    let k_inv_denoised_i = run_re(vec_to_matrix(&get_vec_im(&arr), n_x, n_y),
+                                      model_path, with_rescale)?.concat();
+
+    let k_inv_denoised = build_complex_vector(n, k_inv_denoised_r, k_inv_denoised_i);
+    Ok(k_inv_denoised)
 }
 
 

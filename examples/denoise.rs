@@ -1,6 +1,7 @@
 extern crate gcg2d;
 
 use std::path::PathBuf;
+use std::time::Instant;
 use clap::Parser;
 use num::integer::Roots;
 use gcg2d::common::reduce_matrix;
@@ -9,8 +10,8 @@ use gcg2d::stream::{read_complex_vec_from_binary, write_complex_vec_to_binary, w
 
 #[derive(Parser)]
 struct Cli {
-    #[clap(long = "path_from")]
-    path_from: PathBuf,
+    #[clap(long = "path_data")]
+    path_data: PathBuf,
 
     #[clap(long = "path_save")]
     path_save: PathBuf,
@@ -20,11 +21,10 @@ struct Cli {
     #[clap(long = "height")]
     height: usize,
 
-    #[clap(long = "start")]
-    start: usize,
+    #[clap(long = "model")]
+    model: PathBuf,
 
-    #[clap(long = "step")]
-    step: usize,
+
 
 }
 
@@ -33,18 +33,17 @@ fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
     let (uvych_r_name, uvych_i_name) = ("Uvych_r", "Uvych_i");
-    let vector1 = read_complex_vec_from_binary(args.path_from.join(uvych_r_name), args.path_from.join(uvych_i_name));
+    let vector1 = read_complex_vec_from_binary(args.path_data.join(uvych_r_name), args.path_data.join(uvych_i_name));
 
-    println!("N_in = {:?}", vector1.len());
+    // Подавление шума с помощью нейронной сети
+    let start_time = Instant::now();
 
-    let (vector_res, res_shape) = reduce_matrix(vector1.len(), &vector1, args.start, args.step);
-    println!("N_out = {:?}", vector_res.len());
+    println!("Using neural network model to denoise K_inv.");
 
-    println!("sqrt = {:?}", vector_res.len().sqrt());
+    let denoised = neuro::run_im(&data, params.n, params.n_x, params.n_y, model_path, true).unwrap();
+    write_complex_vector(&denoised, settings.output_dir.join(format!("{}_denoised.xls", data_label)), params.n_x, params.n_y);
 
-    write_complex_vec_to_binary(&vector_res, args.path_save.join(uvych_r_name), args.path_save.join(uvych_i_name));
-
-    println!("Res vector: len={}, shape={:?}", vector_res.len(), res_shape);
+    println!(">> Model inference time: {:?} seconds", start_time.elapsed().as_secs());
 
     write_complex_vector_r_i(&vector_res,
                              args.path_save.join(format!("{}{}", uvych_r_name, ".xls")),

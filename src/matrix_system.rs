@@ -12,9 +12,9 @@ pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, xv: &m
     for i in 0..n_y {
         for j in 0..n_x {
             if j < n_x / 2 {
-                xv[p] = -dim_x / 2.0 - (j as f64)*l_x - l_x / 2.0 - l_x / 20.0;
+                xv[p] = -dim_x / 2.0 - (j as f64)*l_x - l_x / 2.0 /* - l_x / 20.0*/;
             } else {
-                xv[p] = dim_x / 2.0 + (j as f64)*l_x + l_x / 2.0 + l_x / 20.0;
+                xv[p] = dim_x / 2.0 + (j as f64)*l_x + l_x / 2.0 /* l_x / 20.0*/;
             }
             yv[p] = -dim_y / 2.0 + (i as f64)*l_y + l_y / 2.0;
 

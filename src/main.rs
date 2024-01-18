@@ -1,6 +1,3 @@
-// #![feature(generic_const_exprs)]
-// #![feature(const_trait_impl)]
-
 pub mod stream;
 pub mod consts;
 mod matrix_system;
@@ -13,56 +10,30 @@ mod neuro;
 mod vych;
 mod common;
 
+mod tasks;
 
-use std::path::{Path, PathBuf};
-use std::time::Instant;
-use consts::*;
-use gcg2d::solvers::{solve, TaskParams};
+use gcg2d::solvers::{solve};
+use gcg2d::tasks::*;
 
 
 fn main() {
 
     // ---------------------------------------------------------------------------------------------------------------
 
-    let mut task = TaskParams {
-        // Задание начальных значений K
-        use_initial_k: false,
 
-        // Загрузка K из файлов
-        load_init_k_w_from_files: true,
 
-        // Решить прямую задачу
-        solve_direct: true,
+    //let task = init_data_and_full_cycle_with_denoise_k_inv("", "./output", 1e-10);
+    //let task = load_k_w_and_full_cycle(dir_1, "./output");
+    //let task = only_from_saved_uvych("./input", "./output/trash");
 
-        // Загрузка J из файлов
-        load_j_from_files: false,
+    //let task = only_from_saved_uvych("./output/trash", "./output");
+    let task = init_data_and_full_cycle_with_denoise_J("./output/trash", "./output", 0.20, true);
+    //let task = init_data_and_full_cycle("asdf", "./output/trash");
+    solve(&task, &TaskParameters::base(15, 2, 3, 3));
 
-        // Внесение шума в J
-        add_noise_j: false,
-        pct_noise_j: 0.5,
 
-        // Использовать нейросеть для очистки J
-        neuro_use: false,
-
-        // Расчёт поля в точках наблюдения
-        vych_calc: true,
-
-        // Загрузка Uvych из файлов
-        load_uvych_from_files: false,
-
-        // Внесение шума в Uvych
-        add_noise_uvych: false,
-        pct_noise_uvych: 0.00000000001,
-
-        // Решить обратную задачу
-        solve_inverse: true,
-
-        // Пути к файлам
-        input_dir: PathBuf::from("./input"),
-        output_dir: PathBuf::from("./output"),
-    };
-
-    solve(&task);
 }
+
+
 
 

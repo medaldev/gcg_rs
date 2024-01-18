@@ -6,7 +6,99 @@ use crate::matrix_system::fill_xy_col;
 use crate::memory::create_vector_memory;
 
 use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
+use crate::tasks::TaskParameters;
 use crate::common::{build_complex_vector, separate_re_im};
+
+
+pub enum SaveFormat {
+    Xls,
+    Csv,
+    Bin
+}
+
+pub struct ComplexVectorSaver<'a> {
+    pub input_dir: &'a Path,
+    pub output_dir: &'a Path,
+}
+
+impl<'a> ComplexVectorSaver<'a> {
+
+    pub const RE: &'a str = "_re";
+    pub const IM: &'a str = "_im";
+    pub const ABS: &'a str = "_abs";
+
+    pub fn init(input_dir: &'a Path, output_dir: &'a Path) -> Self {
+        Self {
+            input_dir,
+            output_dir
+        }
+    }
+
+    pub fn load(&self, U: &mut Vec<Complex64>, expected_size: usize, name: &str, fmt: SaveFormat, params: &TaskParameters) {
+
+        match fmt {
+            SaveFormat::Xls => {
+                read_complex_vector(
+                    U,
+                    self.input_dir.join(format!("{}{}{}", name, Self::RE, ".xls")),
+                    self.input_dir.join(format!("{}{}{}", name, Self::IM, ".xls")),
+                    params.n_x, params.n_y
+                );
+                assert_eq!(expected_size, U.len());
+            }
+            SaveFormat::Csv => {
+                panic!("Reading from csv is not implemented yet")
+
+            }
+            SaveFormat::Bin => {
+                let readed = read_complex_vec_from_binary(
+                    self.input_dir.join(format!("{}{}", name, Self::RE)),
+                    self.input_dir.join(format!("{}{}", name, Self::IM)),
+                );
+                assert_eq!(expected_size, readed.len());
+                *U = readed;
+            }
+        }
+
+    }
+
+    pub fn save(&self, U: &Vec<Complex64>, name: &str, format: &[SaveFormat], params: &TaskParameters) {
+
+        for fmt in format {
+            match fmt {
+                SaveFormat::Xls => {
+                    write_complex_vector_r_i(
+                        &U,
+                        self.output_dir.join(format!("{}{}{}", name, Self::RE, ".xls")),
+                        self.output_dir.join(format!("{}{}{}", name, Self::IM, ".xls")),
+                        params.n_x, params.n_y
+                    );
+                    write_complex_vector(
+                        &U,
+                        self.output_dir.join(format!("{}{}{}", name, Self::ABS, ".xls")),
+                        params.n_x, params.n_y
+                    );
+                }
+                SaveFormat::Csv => {
+                    csv_complex(self.output_dir.join(format!("{}{}{}", name, Self::RE, ".csv")),
+                                self.output_dir.join(format!("{}{}{}", name, Self::IM, ".csv")),
+                                params.n, params.n_x, params.n_y, params.dim_x, params.dim_y, params.a, params.b, &U);
+
+                }
+                SaveFormat::Bin => {
+                    write_complex_vec_to_binary(
+                        &U,
+                        self.output_dir.join(format!("{}{}", name, Self::RE)),
+                        self.output_dir.join(format!("{}{}", name, Self::IM)),
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+
 
 pub fn write_complex_vector<P: AsRef<Path>>(U: &Vec<Complex64>, path2: P, n_x: usize, n_y: usize) {
     let mut f2 = File::create(path2).unwrap();
@@ -62,6 +154,7 @@ pub fn write_complex_vec_to_binary<P: AsRef<Path>>(vec: &Vec<Complex64>, path_re
     let (re_part, im_part) = separate_re_im(vec);
     write_vec_to_binary_file(&re_part, path_re).unwrap();
     write_vec_to_binary_file(&im_part, path_im).unwrap();
+    println!("write bin {} {}", re_part.len(), im_part.len());
 }
 
 pub fn read_complex_vec_from_binary<P: AsRef<Path>>(path_re: P, path_im: P) -> Vec<Complex64> {

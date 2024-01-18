@@ -11,3 +11,4 @@ pub mod neuro;
 pub mod vych;
 pub mod common;
 pub mod solvers;
+pub mod tasks;

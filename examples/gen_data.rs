@@ -1,13 +1,13 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use itertools::izip;
-use gcg2d::solvers::TaskParams;
+use gcg2d::solvers::SolutionSettings;
 
 fn main() {
 
     // ---------------------------------------------------------------------------------------------------------------
 
-    let mut task = TaskParams {
+    let mut task = SolutionSettings {
         // Задание начальных значений K
         use_initial_k: false,
 
@@ -25,7 +25,8 @@ fn main() {
         pct_noise_j: 0.5,
 
         // Использовать нейросеть для очистки J
-        neuro_use: false,
+        neuro_use_j: false,
+        neuro_use_k_inv: false,
 
         // Расчёт поля в точках наблюдения
         vych_calc: true,
