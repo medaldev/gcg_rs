@@ -1,9 +1,13 @@
 use std::f64::consts::PI;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use num::complex::Complex64;
+use serde_derive::{Deserialize, Serialize};
 use crate::consts::{EWAVE, GIGA};
 
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TaskParameters {
     pub p: usize,
     pub point: usize,
@@ -67,6 +71,20 @@ impl TaskParameters {
 
     pub fn set_hz(&mut self, hz: f64) {
         self.hz = hz
+    }
+
+    pub fn save_to_file(&self, file_path: &Path) -> std::io::Result<()> {
+        let serialized = serde_json::to_string_pretty(&self)?;
+        std::fs::write(file_path, serialized)?;
+        Ok(())
+    }
+
+    pub fn load_from_file(file_path: &Path) -> std::io::Result<Self> {
+        let mut file = File::open(file_path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let deserialized = serde_json::from_str(&contents)?;
+        Ok(deserialized)
     }
 }
 

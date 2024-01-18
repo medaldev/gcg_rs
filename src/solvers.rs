@@ -9,12 +9,12 @@ use crate::memory::create_vector_memory;
 use crate::{neuro, vych};
 use crate::common::{add_noise, add_noise_re_im, build_complex_vector, get_vec_im, get_vec_re, vec_to_matrix};
 use crate::inverse_problem::inverse_p;
-use crate::stream::{ComplexVectorSaver, csv_complex, read_complex_vec_from_binary, read_complex_vector, write_complex_vec_to_binary, write_complex_vector, write_complex_vector_r_i};
+use crate::stream::{ComplexVectorSaver, csv_complex, read_complex_vec_from_binary, read_complex_vector, read_f64_from_file, read_value_from_binary_file, write_complex_vec_to_binary, write_complex_vector, write_complex_vector_r_i, write_f64_to_file, write_value_to_binary_file};
 use crate::stream::SaveFormat::*;
 use crate::tasks::{SolutionSettings, TaskParameters};
 
 
-pub fn solve(settings: &SolutionSettings, params: &TaskParameters)
+pub fn solve(settings: &SolutionSettings, params: &mut TaskParameters)
 
 {
     let global_start_time = Instant::now();
@@ -41,6 +41,10 @@ pub fn solve(settings: &SolutionSettings, params: &TaskParameters)
 
     if settings.load_init_k_w_from_files {
         // Загрузка K и W из xls файлов
+        params.k0 = Complex64::new(
+            read_f64_from_file(settings.output_dir.join("k0_re.txt").as_path()).unwrap(),
+            read_f64_from_file(settings.output_dir.join("k0_im.txt").as_path()).unwrap(),
+        );
         vector_stream.load(&mut K, params.n, "K", Xls, params);
         vector_stream.load(&mut W, params.n, "W", Xls, params);
 
@@ -48,6 +52,8 @@ pub fn solve(settings: &SolutionSettings, params: &TaskParameters)
     }
 
     // Вывод начальных значений K, W
+    write_f64_to_file(params.k0.re, settings.output_dir.join("k0_re.txt").as_path()).unwrap();
+    write_f64_to_file(params.k0.im, settings.output_dir.join("k0_im.txt").as_path()).unwrap();
     vector_stream.save(&K, "K", &[Xls, Csv], params);
     vector_stream.save(&W, "W", &[Xls, Csv], params);
 
@@ -98,32 +104,6 @@ pub fn solve(settings: &SolutionSettings, params: &TaskParameters)
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    // if p.neuro_use {
-    //     // Подавление шума с помощью нейронной сети
-    //     let start_time = Instant::now();
-    //
-    //     println!("Using neural network model to denoise J.");
-    //
-    //     {
-    //         let j2_denoised_re = neuro::run(p.output_dir.join("J_dir_r.xls"), PathBuf::from(params.model),
-    //                                         p.output_dir.join("J_dir_r_denoised.xls"), true).unwrap().concat();
-    //         let j2_denoised_im = neuro::run(p.output_dir.join("J_dir_i.xls"), PathBuf::from(params.model),
-    //                                         p.output_dir.join("J_dir_i_denoised.xls"), true).unwrap().concat();
-    //         // let J2 = build_complex_vector(params.n, j2_denoised_re, j2_denoised_im);
-    //     }
-    //
-    //
-    //     read_complex_vector(&mut J, p.output_dir.join("J_dir_r_denoised.xls"), p.output_dir.join("J_dir_i_denoised.xls"), params.n_x, params.n_y);
-    //
-    //     //----------------------------------------------------------------------------------------------------------------
-    //
-    //     let errors: Vec<f64> = J.iter().zip(J.iter()).map(|(j1, j2)| ((j1 - j2).abs() * 100.).round() / 100.).collect();
-    //     println!("params.avg error: {:?}", errors.iter().sum::<f64>() / errors.len() as f64);
-    //     println!(">> Model inference time: {:?} seconds", start_time.elapsed().as_secs());
-    //
-    // }
-
-    // ----------------------------------------------------------------------------------------------------------------
 
     let mut Bvych = create_vector_memory(params.n, Complex64::zero());
     let mut Uvych = create_vector_memory(params.n, Complex64::zero());
@@ -160,6 +140,9 @@ pub fn solve(settings: &SolutionSettings, params: &TaskParameters)
         block_inverse(settings, params, &Uvych);
     }
 
+    // Сохраняем параметры задачи
+    params.save_to_file(settings.output_dir.join("params.json").as_path()).unwrap();
+
     let res_duration =  global_start_time.elapsed().as_secs();
     let eps_rnd = 1.0e2;
     println!("\n==========================================================================");
@@ -181,6 +164,7 @@ pub fn block_inverse(settings: &SolutionSettings, params: &TaskParameters, Uvych
 
     // ----------------------------------------------------------------------------------------------------------------
     vector_stream.save(&K_inv, "K_inv", &[Xls, Csv], params);
+    vector_stream.save(&J_inv, "J_inv", &[Xls, Csv], params);
 
     if settings.neuro_use_k_inv {
         // Подавление шума с помощью нейронной сети

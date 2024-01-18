@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io;
 use std::path::{Path, PathBuf};
 use num::complex::{Complex64, ComplexFloat};
 use std::io::{BufRead, BufReader, Read, Write};
@@ -154,7 +155,6 @@ pub fn write_complex_vec_to_binary<P: AsRef<Path>>(vec: &Vec<Complex64>, path_re
     let (re_part, im_part) = separate_re_im(vec);
     write_vec_to_binary_file(&re_part, path_re).unwrap();
     write_vec_to_binary_file(&im_part, path_im).unwrap();
-    println!("write bin {} {}", re_part.len(), im_part.len());
 }
 
 pub fn read_complex_vec_from_binary<P: AsRef<Path>>(path_re: P, path_im: P) -> Vec<Complex64> {
@@ -176,6 +176,20 @@ pub fn write_vec_to_binary_file<P: AsRef<Path>>(vec: &Vec<f64>, filename: P) -> 
 
     Ok(())
 }
+
+pub fn write_value_to_binary_file<P: AsRef<Path>>(val: f64, filename: P) -> std::io::Result<()> {
+    let mut file = File::create(filename)?;
+    file.write_f64::<LittleEndian>(val)?;
+    Ok(())
+}
+
+pub fn read_value_from_binary_file<P: AsRef<Path>>(filename: P) -> std::io::Result<f64> {
+    let mut file = File::open(filename)?;
+    let value = file.read_f64::<LittleEndian>()?;
+    Ok(value)
+}
+
+
 
 pub fn read_vec_from_binary_file<P: AsRef<Path>>(filename: P) -> std::io::Result<Vec<f64>> {
     let mut vec = Vec::new();
@@ -206,6 +220,20 @@ pub fn read_complex_vector<P: AsRef<Path>>(U: &mut Vec<Complex64>, path_r: P, pa
         }
     }
 
+}
+
+pub fn read_f64_from_file(file_path: &Path) -> io::Result<f64> {
+    let file = File::open(file_path)?;
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+    reader.read_line(&mut line)?;
+    line.trim().parse::<f64>().map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+}
+
+pub fn write_f64_to_file(value: f64, file_path: &Path) -> io::Result<()> {
+    let mut file = File::create(file_path)?;
+    writeln!(file, "{}", value)?;
+    Ok(())
 }
 
 pub fn get_complex_vector<P: AsRef<Path>>(path_r: P, path_i: P) -> Vec<Complex64> {

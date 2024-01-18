@@ -16,7 +16,7 @@ use gcg2d::solvers::{solve};
 use gcg2d::tasks::*;
 
 
-fn main() {
+fn main() -> anyhow::Result<()> {
 
     // ---------------------------------------------------------------------------------------------------------------
 
@@ -27,10 +27,13 @@ fn main() {
     //let task = only_from_saved_uvych("./input", "./output/trash");
 
     //let task = only_from_saved_uvych("./output/trash", "./output");
-    let task = init_data_and_full_cycle_with_denoise_J("./output/trash", "./output", 0.60, true);
+    let settings = init_data_and_full_cycle_with_denoise_J("./output/trash", "./output", 0.0000000095, false);
     //let task = init_data_and_full_cycle("asdf", "./output/trash");
-    solve(&task, &TaskParameters::base(50, 2, 3, 3));
 
+    let mut params = TaskParameters::from_grid(30, 1);
+    solve(&settings, &mut params);
+
+    Ok(())
 
 }
 

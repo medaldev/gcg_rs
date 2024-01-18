@@ -30,5 +30,5 @@ fn main() {
     let args = Cli::parse();
     let settings = load_k_w_and_full_cycle(args.path_from, args.path_save);
 
-    solve(&settings, &TaskParameters::base(args.p, args.point, args.ip1.unwrap_or(3), args.ip2.unwrap_or(3)));
+    solve(&settings, &mut TaskParameters::base(args.p, args.point, args.ip1.unwrap_or(3), args.ip2.unwrap_or(3)));
 }

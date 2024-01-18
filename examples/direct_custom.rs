@@ -67,5 +67,5 @@ fn main() {
         neuro_use_k_inv: false,
     };
 
-    solve(&settings, &TaskParameters::base(args.p, args.point, args.ip1, args.ip2));
+    solve(&settings, &mut TaskParameters::base(args.p, args.point, args.ip1, args.ip2));
 }
