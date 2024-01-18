@@ -3,7 +3,7 @@ extern crate gcg2d;
 use std::path::PathBuf;
 use num::integer::Roots;
 use gcg2d::common::{avg_pool, reduce_matrix};
-use gcg2d::stream::{read_complex_vec_from_binary, write_complex_vec_to_binary, write_complex_vector_r_i};
+use gcg2d::stream::{ComplexVectorSaver, read_complex_vec_from_binary, write_complex_vec_to_binary, write_complex_vector_r_i};
 
 use clap::Parser;
 
@@ -39,8 +39,9 @@ fn main() -> anyhow::Result<()> {
 
     let args = Cli::parse();
 
-    let (uvych_r_name, uvych_i_name) = ("Uvych_r", "Uvych_i");
+    let (uvych_r_name, uvych_i_name) = ("Uvych_re", "Uvych_im");
     let vector1 = read_complex_vec_from_binary(args.path_from.join(uvych_r_name), args.path_from.join(uvych_i_name));
+
 
     println!("N_in = {:?}", vector1.len());
 

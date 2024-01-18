@@ -32,6 +32,10 @@ impl Default for TaskParameters {
 
 impl TaskParameters {
 
+    pub fn from_grid(p: usize, point: usize) -> Self {
+        Self::base(p, point, 3, 3)
+    }
+
     pub fn base(p: usize, point: usize, ip1: usize, ip2: usize) -> Self {
         TaskParameters::init(p, point, ip1, ip2, 1.1 * GIGA, Complex64::new(0.4, 0.0), 0.15, 0.15, 0.01, "./models/model_12.pt")
 

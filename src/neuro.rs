@@ -4,7 +4,7 @@ use std::path::Path;
 use num::complex::Complex64;
 use tch::{Device, IndexOp, Kind, Tensor};
 use tch::utils::has_cuda;
-use crate::common::{build_complex_vector, get_vec_im, get_vec_re, vec_to_matrix};
+use crate::common::{build_complex_vector, get_vec_im, get_vec_re, matrix_to_vec, vec_to_matrix};
 use crate::linalg::min_max_f64_vec;
 use crate::neuro;
 
@@ -68,10 +68,10 @@ pub fn run_re(mut arr: Vec<Vec<f64>>, model_path: &Path, with_rescale: bool) -> 
 }
 
 pub fn run_im(arr: &Vec<Complex64>, n: usize, n_x: usize, n_y: usize, model_path: &Path, with_rescale: bool) -> anyhow::Result<Vec<Complex64>> {
-    let k_inv_denoised_r = run_re(vec_to_matrix(&get_vec_re(&arr), n_x, n_y),
-                                      model_path, with_rescale)?.concat();
-    let k_inv_denoised_i = run_re(vec_to_matrix(&get_vec_im(&arr), n_x, n_y),
-                                      model_path, with_rescale)?.concat();
+    let k_inv_denoised_r = matrix_to_vec(run_re(vec_to_matrix(&get_vec_re(&arr), n_x, n_y),
+                                      model_path, with_rescale)?, n_x, n_y);
+    let k_inv_denoised_i = matrix_to_vec(run_re(vec_to_matrix(&get_vec_im(&arr), n_x, n_y),
+                                      model_path, with_rescale)?, n_x, n_y);
 
     let k_inv_denoised = build_complex_vector(n, k_inv_denoised_r, k_inv_denoised_i);
     Ok(k_inv_denoised)

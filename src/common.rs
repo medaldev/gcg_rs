@@ -93,6 +93,19 @@ pub fn vec_to_matrix<T>(U: &Vec<T>, n_x: usize, n_y: usize) -> Vec<Vec<T>> where
     res
 }
 
+pub fn matrix_to_vec<T>(arr: Vec<Vec<T>>, n_x: usize, n_y: usize) -> Vec<T> where T: Zero + Clone + Copy {
+    let mut U = vec![T::zero(); n_x * n_y];
+    let mut p = 0;
+
+    for i2 in 0..n_y {
+        for i1 in 0..n_x {
+            U[p] = arr[i2][i1];
+            p += 1;
+        }
+    }
+    U
+}
+
 pub fn build_complex_vector(n: usize, re: Vec<f64>, im: Vec<f64>) -> Vec<Complex<f64>> {
     assert_eq!(n, re.len());
     assert_eq!(n, im.len());

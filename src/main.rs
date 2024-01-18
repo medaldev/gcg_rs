@@ -27,9 +27,9 @@ fn main() {
     //let task = only_from_saved_uvych("./input", "./output/trash");
 
     //let task = only_from_saved_uvych("./output/trash", "./output");
-    let task = init_data_and_full_cycle_with_denoise_J("./output/trash", "./output", 0.20, true);
+    let task = init_data_and_full_cycle_with_denoise_J("./output/trash", "./output", 0.60, true);
     //let task = init_data_and_full_cycle("asdf", "./output/trash");
-    solve(&task, &TaskParameters::base(15, 2, 3, 3));
+    solve(&task, &TaskParameters::base(50, 2, 3, 3));
 
 
 }

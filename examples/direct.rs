@@ -18,10 +18,11 @@ struct Cli {
     point: usize,
 
     #[clap(long = "ip1")]
-    ip1: usize,
+    ip1: Option<usize>,
 
     #[clap(long = "ip2")]
-    ip2: usize,
+    ip2: Option<usize>,
+
 }
 
 fn main() {
@@ -30,5 +31,5 @@ fn main() {
 
     let settings = init_data_and_full_cycle(args.path_from, args.path_save);
 
-    solve(&settings, &TaskParameters::base(args.p, args.point, args.ip1, args.ip2));
+    solve(&settings, &TaskParameters::base(args.p, args.point, args.ip1.unwrap_or(3), args.ip2.unwrap_or(3)));
 }
