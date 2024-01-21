@@ -95,7 +95,7 @@ pub fn solve(settings: &SolutionSettings, params: &mut TaskParameters)
 
         println!("Using neural network model to denoise J.");
 
-        let denoised = neuro::run_im(&J, params.n, params.n_x, params.n_y, params.model.as_path(), true).unwrap();
+        let denoised = neuro::run_im(&J, params.n, params.n_x, params.n_y, params.model.as_path(), false).unwrap();
         vector_stream.save(&denoised, "J_denoised", &[Xls], params);
         J = denoised;
 
