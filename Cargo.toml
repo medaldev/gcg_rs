@@ -13,10 +13,11 @@ path = "src/lib.rs"
 [dependencies]
 num = { version = "0.4.1", features = ["serde"] }
 rayon = "1.8.0"
-tch = "0.14.0"
+tch = { version = "0.14.0", features = ["download-libtorch"]}
 anyhow = "1.0.78"
 pbr = "1.1.1"
 rand="0.8.5"
+rand_distr = "0.4.3"
 byteorder = "1.5.0"
 itertools = "0.12.0"
 clap = { version = "4.4.18", features = ["derive"] }
@@ -24,3 +25,6 @@ clap = { version = "4.4.18", features = ["derive"] }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
+
+dyn-clone = "1.0.16"
+

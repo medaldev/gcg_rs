@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::path::Path;
 use num::{Complex, Zero};
@@ -174,3 +175,12 @@ pub fn get_conv2d_shape_out(
 //     let n = U.len();
 //
 // }
+
+
+pub fn copy_input_data(file_path: &Path, task_in_dir: &Path, task_out_dir: &Path, new_name: &str) {
+    fs::create_dir_all(task_in_dir).unwrap();
+    fs::create_dir_all(task_out_dir).unwrap();
+
+    let dest = task_in_dir.join(Path::new(new_name).with_extension("xls"));
+    fs::copy(file_path, dest.as_path()).unwrap();
+}

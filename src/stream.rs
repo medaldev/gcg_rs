@@ -295,3 +295,16 @@ pub fn read_xls<P: AsRef<Path>>(path: P) -> Vec<Vec<f64>> {
     arr
 }
 
+
+pub fn matrix_to_file<P: AsRef<Path>>(matrix: &Vec<Vec<f64>>, filename: P) -> std::io::Result<()> {
+    let mut file = File::create(filename)?;
+    let content = vec_to_string(matrix);
+    file.write_all(content.as_bytes())
+}
+
+pub fn vec_to_string(matrix: &Vec<Vec<f64>>) -> String {
+    matrix.iter()
+        .map(|row| row.iter().map(|num| num.to_string()).collect::<Vec<String>>().join("\t"))
+        .collect::<Vec<String>>().join("\n")
+}
+

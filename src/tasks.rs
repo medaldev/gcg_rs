@@ -69,8 +69,14 @@ impl TaskParameters {
         }
     }
 
-    pub fn set_hz(&mut self, hz: f64) {
-        self.hz = hz
+    pub fn set_hz(mut self, hz: f64) -> Self {
+        self.hz = hz;
+        self
+    }
+
+    pub fn set_k0(mut self, k0: Complex64) -> Self {
+        self.k0 = k0;
+        self
     }
 
     pub fn save_to_file(&self, file_path: &Path) -> std::io::Result<()> {

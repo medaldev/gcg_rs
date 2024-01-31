@@ -1,13 +1,15 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use itertools::izip;
+use gcg2d::initial;
 use gcg2d::solvers::SolutionSettings;
+use gcg2d::tasks::TaskParameters;
 
 fn main() {
 
     // ---------------------------------------------------------------------------------------------------------------
 
-    let mut task = SolutionSettings {
+    let mut settings = SolutionSettings {
         // Задание начальных значений K
         use_initial_k: false,
 
@@ -22,7 +24,7 @@ fn main() {
 
         // Внесение шума в J
         add_noise_j: false,
-        pct_noise_j: 0.5,
+        pct_noise_j: 0.0,
 
         // Использовать нейросеть для очистки J
         neuro_use_j: false,
@@ -36,7 +38,7 @@ fn main() {
 
         // Внесение шума в Uvych
         add_noise_uvych: false,
-        pct_noise_uvych: 0.00000000001,
+        pct_noise_uvych: 0.0,
 
         // Решить обратную задачу
         solve_inverse: true,
@@ -80,15 +82,29 @@ fn main() {
             let task_in_dir = in_dir.join(file_name.as_path());
             let task_out_dir = out_dir.join(file_name.as_path());
 
-            copy_input_data(file_k_r.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "K_r");
-            copy_input_data(file_k_i.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "K_i");
+            // copy_input_data(file_k_r.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "K_r");
+            // copy_input_data(file_k_i.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "K_i");
+            //
+            // copy_input_data(file_w_r.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "W_r");
+            // copy_input_data(file_w_i.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "W_i");
 
-            copy_input_data(file_w_r.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "W_r");
-            copy_input_data(file_w_i.path().as_path(), task_in_dir.as_path(), task_out_dir.as_path(), "W_i");
+
+            settings.input_dir = task_in_dir.clone();
+            settings.output_dir = task_out_dir.clone();
+
+            let p = 30;
+            let point = 2;
+            let params = TaskParameters::from_grid(p, point);
+
+            let k0 = 0.1;
+
+            let mut surface = initial::Surface::new(p, p, point, k0);
+            let total_figs = initial::polygon_covering(
+                &mut surface, 0.025, 0.4, 100,
+                (0.99, 1.01), 0.4, 0.4, 50
+            ).unwrap();
 
 
-            task.input_dir = task_in_dir.clone();
-            task.output_dir = task_out_dir.clone();
 
             // solve(&task);
 
@@ -109,11 +125,4 @@ fn main() {
     }
 }
 
-pub fn copy_input_data(file_path: &Path, task_in_dir: &Path, task_out_dir: &Path, new_name: &str) {
-    fs::create_dir_all(task_in_dir).unwrap();
-    fs::create_dir_all(task_out_dir).unwrap();
-
-    let dest = task_in_dir.join(Path::new(new_name).with_extension("xls"));
-    fs::copy(file_path, dest.as_path()).unwrap();
-}
 
