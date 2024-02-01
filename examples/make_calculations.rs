@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use clap::Parser;
 use itertools::izip;
 use num::complex::Complex64;
 use rand::distributions::Distribution;
@@ -10,7 +11,22 @@ use gcg2d::stream::{ComplexVectorSaver, write_f64_to_file};
 use gcg2d::stream::SaveFormat::{Csv, Xls};
 use gcg2d::tasks::{load_k_w_and_full_cycle, SolutionSettings, TaskParameters};
 
+#[derive(Parser)]
+struct Cli {
+    #[clap(long = "data_dir")]
+    data_dir: PathBuf,
+
+    #[clap(long = "from")]
+    from: usize,
+
+    #[clap(long = "to")]
+    to: usize,
+
+}
+
 fn main() {
+
+    let args = Cli::parse();
 
     // ---------------------------------------------------------------------------------------------------------------
 
@@ -26,11 +42,11 @@ fn main() {
     let gen_spikiness = rand::distributions::Uniform::from(0.1..0.99);
     let gen_vert = rand::distributions::Uniform::from(10usize..70);
 
-    for itera in 70..1000 {
+    for itera in args.from..args.to {
 
         for type_data in ["train", "val"] {
 
-            let data_dir = PathBuf::from("../datasets/gcg19").join(type_data).join("calculations");
+            let data_dir = args.data_dir.join(type_data).join("calculations");
 
             let name = format!("example_{itera}");
 
