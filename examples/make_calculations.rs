@@ -15,6 +15,7 @@ fn main() {
     // ---------------------------------------------------------------------------------------------------------------
 
     let mut settings = load_k_w_and_full_cycle("<None>", "<None>");
+    settings.solve_inverse = false;
 
     let mut rng = rand::thread_rng();
     let gen_k0 = rand::distributions::Uniform::from(0.1..50.1);
@@ -25,11 +26,11 @@ fn main() {
     let gen_spikiness = rand::distributions::Uniform::from(0.1..0.99);
     let gen_vert = rand::distributions::Uniform::from(10usize..70);
 
-    for type_data in ["train", "val"] {
+    for itera in 70..1000 {
 
-        let data_dir = PathBuf::from("/home/amedvedev/fprojects/python/denoising/data/datasets/gcg19").join(type_data).join("calculations");
+        for type_data in ["train", "val"] {
 
-        for itera in 0..10 {
+            let data_dir = PathBuf::from("../datasets/gcg19").join(type_data).join("calculations");
 
             let name = format!("example_{itera}");
 
