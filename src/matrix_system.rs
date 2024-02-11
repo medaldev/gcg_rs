@@ -2,21 +2,31 @@ use num::complex::{Complex64, ComplexFloat};
 use num::Zero;
 use crate::memory::create_vector_memory;
 
-pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, xv: &mut [f64], yv: &mut [f64], shift: f64) {
+pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64, b: f64, xv: &mut [f64], yv: &mut [f64], shift: f64) {
 
     let mut p = 0;
 
     let l_x = dim_x / (n_x as f64);
     let l_y = dim_y / (n_y as f64);
 
+    // for i in 0..n_y {
+    //     for j in 0..n_x {
+    //         if j < n_x / 2 {
+    //             xv[p] = -dim_x / 2.0 - (j as f64)*l_x - l_x / 2.0 /* - l_x / 20.0*/;
+    //         } else {
+    //             xv[p] = dim_x / 2.0 + (j as f64)*l_x + l_x / 2.0 /* l_x / 20.0*/;
+    //         }
+    //         yv[p] = -dim_y / 2.0 + (i as f64)*l_y + l_y / 2.0;
+    //
+    //         p += 1;
+    //     }
+    // }
+
     for i in 0..n_y {
         for j in 0..n_x {
-            if j < n_x / 2 {
-                xv[p] = -dim_x / 2.0 - (j as f64)*l_x - l_x / 2.0 /* - l_x / 20.0*/;
-            } else {
-                xv[p] = dim_x / 2.0 + (j as f64)*l_x + l_x / 2.0 /* l_x / 20.0*/;
-            }
-            yv[p] = -dim_y / 2.0 + (i as f64)*l_y + l_y / 2.0;
+            xv[p] = a + j as f64 * l_x + l_x / 2.0;
+            //yv[p] = b + i as f64 * l_y + l_y / 2.0 + 2.0 * dim_x;
+            yv[p] = b + i as f64 * l_y + l_y / 2.0 + 2.0 * dim_x;
 
             p += 1;
         }
@@ -34,7 +44,7 @@ pub fn fill_xy_pos(point: usize, n: usize, n_x: usize, n_y: usize, dim_x: f64, d
 
     for i in 0..n_y {
         for j in 0..n_x {
-            x[p] -= l_x / 2.0;  // Why p??
+            x[p] -= l_x / 2.0;
             y[p] -= l_y / 2.0;
 
             p += 1;
@@ -63,7 +73,7 @@ pub fn fill_xy_col(N: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: 
 
 pub fn fxy(x: f64, y: f64, z: f64, k: Complex64, dim_x: f64, dim_y: f64) -> Complex64 {
     let x0 = 0.0;
-    let y0 = dim_y / 2.0 + 0.15;
+    let y0 = -2.5 * dim_y / 1.0 + 0.15;
     let z0 = 0.0;
 
     let r0 = ((x - x0)*(x - x0) + (y - y0)*(y - y0) + (z - z0)*(z - z0)).sqrt();

@@ -7,7 +7,7 @@ use crate::direct_problem::direct_problem;
 use crate::initial::initial_k0;
 use crate::memory::create_vector_memory;
 use crate::{neuro, vych};
-use crate::common::{add_noise, add_noise_re_im, build_complex_vector, get_vec_im, get_vec_re, vec_to_matrix};
+use crate::common::{add_noise, add_noise_re_im, add_shift, build_complex_vector, get_vec_im, get_vec_re, vec_to_matrix};
 use crate::inverse_problem::inverse_p;
 use crate::stream::{ComplexVectorSaver, csv_complex, read_complex_vec_from_binary, read_complex_vector, read_f64_from_file, read_value_from_binary_file, write_complex_vec_to_binary, write_complex_vector, write_complex_vector_r_i, write_f64_to_file, write_value_to_binary_file};
 use crate::stream::SaveFormat::*;
@@ -111,6 +111,7 @@ pub fn solve(settings: &SolutionSettings, params: &mut TaskParameters)
     if settings.vych_calc {
         // Расчёт поля в точках наблюдения
         vych::r_part_vych(params.point, params.shift, params.n_x, params.n_y, params.dim_x, params.dim_y, params.a, params.b, params.k0, params.n, params.ip1, &mut Bvych);
+        vector_stream.save(&Bvych, "Bvych", &[Xls], params);
         vych::get_uvych(params.point, params.n, params.n_x, params.n_y, params.ip1, params.dim_x, params.dim_y, params.a, params.b, params.shift,
                         &J, &mut Uvych, &Bvych, params.k0);
         println!("Uvych was calculated.");
@@ -134,6 +135,9 @@ pub fn solve(settings: &SolutionSettings, params: &mut TaskParameters)
         // Запись зашумлённых данных
         vector_stream.save(&Uvych, "Uvych_noised", &[Xls, Csv], params);
     }
+
+    // add_shift(&mut Uvych, 0.0000);
+
 
     // ----------------------------------------------------------------------------------------------------------------
     if settings.solve_inverse {

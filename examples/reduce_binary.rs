@@ -32,7 +32,7 @@ struct Cli {
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
-    let (uvych_r_name, uvych_i_name) = ("Uvych_r", "Uvych_i");
+    let (uvych_r_name, uvych_i_name) = ("Uvych_re", "Uvych_im");
     let vector1 = read_complex_vec_from_binary(args.path_from.join(uvych_r_name), args.path_from.join(uvych_i_name));
 
     println!("N_in = {:?}", vector1.len());

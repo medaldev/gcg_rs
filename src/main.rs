@@ -70,8 +70,10 @@ fn main() -> anyhow::Result<()> {
         output_dir: PathBuf::from("./output"),
     };
 
-    let mut params = TaskParameters::from_grid(32, 2);
-    solve(&settings, &mut params);
+
+
+    let mut params = TaskParameters::from_grid(61, 1);
+    solve(&init_data_and_full_cycle("./<>", "./output"), &mut params);
 
     Ok(())
 

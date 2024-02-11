@@ -22,6 +22,28 @@ pub fn add_noise(U: &mut Vec<Complex64>, pct: f64) {
     }
 }
 
+pub fn add_shift(U: &mut Vec<Complex64>, pct: f64) {
+
+    let mut rng = rand::thread_rng();
+    let ppp = Uniform::from(0.0..pct).sample(&mut rng);
+
+    for num in U {
+        *num *= 1. + ppp;
+    }
+}
+
+pub fn add_noise_to_matrix(U: &mut Vec<Vec<f64>>, pct: f64) {
+
+    let mut rng = rand::thread_rng();
+    let ppp = Uniform::from(0.0..pct);
+
+    for row in U {
+        for el in row {
+            *el *= 1. + ppp.sample(&mut rng);
+        }
+    }
+}
+
 
 pub fn add_noise_re_im(U: &mut Vec<Complex64>, pct: f64) {
 

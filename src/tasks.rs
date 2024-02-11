@@ -279,6 +279,13 @@ pub fn only_from_saved_uvych<P: AsRef<Path>>(inp_dir: P, out_dir: P) -> Solution
     }
 }
 
+pub fn gen_k_w_and_full_cycle<P: AsRef<Path>>(inp_dir: P, out_dir: P) -> SolutionSettings where PathBuf: From<P> {
+
+
+    load_k_w_and_full_cycle(inp_dir, out_dir)
+}
+
+
 pub fn load_k_w_and_full_cycle<P: AsRef<Path>>(inp_dir: P, out_dir: P) -> SolutionSettings where PathBuf: From<P> {
     SolutionSettings {
         // Задание начальных значений K

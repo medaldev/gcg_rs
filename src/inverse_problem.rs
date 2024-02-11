@@ -26,7 +26,7 @@ pub fn get_jj(n: usize, n_x: usize, n_y: usize, point: usize, shift: f64, ip: us
     let mut x = vec![0f64; n];
     let mut y = vec![0f64; n];
 
-    fill_xyv(n, n_x, n_y, dim_x, dim_y, &mut xv, &mut yv, shift);
+    fill_xyv(n, n_x, n_y, dim_x, dim_y, a, b, &mut xv, &mut yv, shift);
     fill_xy_pos(point, n, n_x, n_y, dim_x, dim_y, a, b, &mut x, &mut y);
 
     for i in 0..n {
