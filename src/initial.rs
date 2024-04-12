@@ -1,9 +1,10 @@
 use num::complex::Complex64;
-use num::Zero;
+use num::{Complex, Zero};
 use crate::matrix_system::fill_xy_col;
 use crate::memory::create_vector_memory;
 
 use std::f64::consts::PI;
+use std::path::Path;
 use anyhow::anyhow;
 use rand::distributions::{Distribution, Uniform};
 use rand_distr::{Normal};
@@ -48,7 +49,7 @@ pub fn initial_k0(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f
             x = xc[ind];
             y = yc[ind];
 
-            if x * x + y * y <= r1 * r1 {
+            if x * x / 4.0 + y * y <= r1 * r1 {
                 K[ind] = Complex64::new(0.7, 0.);
                 if (x < 0.){
                     K[ind] = Complex64::new(0.6, 0.);
@@ -56,18 +57,18 @@ pub fn initial_k0(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f
 
                 W[ind] = Complex64::new(1.0, 0.);
 
-                if (x * x + y * y <= r2 * r2) {
+                if (x * x / 4.0 + y * y <= r2 * r2) {
                     K[ind] = k1;
                     W[ind] = Complex64::zero();
 
-                    if (x * x + y * y <= r3 * r3) {
+                    if (x * x / 4.0 + y * y <= 1.0) {
                         K[ind] = Complex64::new(0.35, 0.);
                         if (x < 0.){
                             K[ind] = Complex64::new(0.25, 0.);
                         }
 
                         W[ind] = Complex64::new(1.0, 0.);
-                        if (x * x + y * y <= r4 * r4) {
+                        if (x * x / 4.0 + y * y <= r4 * r4) {
                             K[ind] = k1;
                             W[ind] = Complex64::zero();
                         }
@@ -88,6 +89,50 @@ pub fn initial_k0(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f
     for i1 in 0..n {
         K[i1] *= W[i1];
     }
+
+}
+
+
+pub fn initial_k_polygons(params: &TaskParameters) -> (Vec<Complex<f64>>, Vec<Complex<f64>>) {
+
+    let mut rng = rand::thread_rng();
+    let gen_k0 = rand::distributions::Uniform::from(0.1..50.1);
+    let gen_poly_size = rand::distributions::Uniform::from(0.02..0.1);
+    let gen_k0_dev = rand::distributions::Uniform::from(0.01..0.3);
+    let gen_irr = rand::distributions::Uniform::from(0.1..0.99);
+    let gen_proba = rand::distributions::Uniform::from(0.2..0.99);
+    let gen_spikiness = rand::distributions::Uniform::from(0.1..0.99);
+    let gen_vert = rand::distributions::Uniform::from(10usize..70);
+
+    let mut surface = Surface::new(params.p, params.p, params.point, params.k0.re);
+    let mut total_figs = vec![];
+
+    while total_figs.is_empty() {
+        total_figs = initial::polygon_covering(
+            &mut surface,
+            gen_poly_size.sample(&mut rng),
+            gen_proba.sample(&mut rng),
+            1000,
+            gen_k0_dev.sample(&mut rng),
+            gen_irr.sample(&mut rng),
+            gen_spikiness.sample(&mut rng),
+            gen_vert.sample(&mut rng)
+        ).unwrap();
+    }
+
+    let K = build_complex_vector(
+        params.n,
+        matrix_to_vec(surface.get_k_matrix(), surface.cols, surface.rows),
+        vec![0.0; surface.cols * surface.rows],
+    );
+
+    let W = build_complex_vector(
+        params.n,
+        matrix_to_vec(surface.get_w_matrix(), surface.cols, surface.rows),
+        vec![0.0; surface.cols * surface.rows],
+    );
+    (K, W)
+
 
 }
 
@@ -161,7 +206,11 @@ pub fn clip(value: f64, lower: f64, upper: f64) -> f64 {
 }
 
 use dyn_clone::DynClone;
+use serde_derive::{Deserialize, Serialize};
+use crate::common::{build_complex_vector, matrix_to_vec};
+use crate::initial;
 use crate::stream::matrix_to_file;
+use crate::tasks::TaskParameters;
 
 
 pub trait Figure {
@@ -305,9 +354,26 @@ impl Surface {
 
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PolygonCoveringResult {
+    pub center: (f64, f64),
+    pub points: Vec<(f64, f64)>,
+}
+
+impl PolygonCoveringResult {
+    pub fn save_to_file(&self, file_path: &Path) -> std::io::Result<()> {
+        let serialized = serde_json::to_string_pretty(&self)?;
+        std::fs::write(file_path, serialized)?;
+        Ok(())
+    }
+}
+
 pub fn polygon_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f64, limit: usize,
                         k0_dev: f64,
-                        irregularity: f64, spikiness: f64, num_vertices: usize) -> anyhow::Result<usize> {
+                        irregularity: f64, spikiness: f64, num_vertices: usize) -> anyhow::Result<Vec<PolygonCoveringResult>> {
+
+    let mut res = vec![];
+
     let each_abs_size = (each_size_pct * surface.rows as f64, each_size_pct * surface.cols as f64);
     let mut counter = 0;
     let mut rng = rand::thread_rng();
@@ -333,12 +399,17 @@ pub fn polygon_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f
             let rad = (each_abs_size.0.powi(2) + each_abs_size.1.powi(2)).sqrt();
 
             let points = generate_polygon(center, rad, irregularity, spikiness, num_vertices)?;
-            let p = Polygon::new(points, k_gen.sample(&mut rng));
+            let p = Polygon::new(points.clone(), k_gen.sample(&mut rng));
             surface.add_figure(p);
 
             counter += 1;
+
+            res.push(PolygonCoveringResult {
+                center,
+                points,
+            })
         }
     }
 
-    Ok(counter)
+    Ok(res)
 }

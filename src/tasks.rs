@@ -156,6 +156,49 @@ pub fn init_data_and_full_cycle<P: AsRef<Path>>(inp_dir: P, out_dir: P) -> Solut
     }
 }
 
+
+pub fn init_data_and_forward<P: AsRef<Path>>(inp_dir: P, out_dir: P) -> SolutionSettings where PathBuf: From<P> {
+    SolutionSettings {
+        // Задание начальных значений K
+        use_initial_k: true,
+
+        // Загрузка K из файлов
+        load_init_k_w_from_files: false,
+
+        // Решить прямую задачу
+        solve_direct: true,
+
+        // Загрузка J из файлов
+        load_j_from_files: false,
+
+        // Внесение шума в J
+        add_noise_j: false,
+        pct_noise_j: 0.5,
+
+        // Использовать нейросеть для очистки J
+        neuro_use_j: false,
+
+        // Расчёт поля в точках наблюдения
+        vych_calc: true,
+
+        // Загрузка Uvych из файлов
+        load_uvych_from_files: false,
+
+        // Внесение шума в Uvych
+        add_noise_uvych: false,
+        pct_noise_uvych: 1e-6,
+
+        // Решить обратную задачу
+        solve_inverse: false,
+
+        // Пути к файлам
+        input_dir: PathBuf::from(inp_dir),
+        output_dir: PathBuf::from(out_dir),
+        neuro_use_k_inv: false,
+    }
+}
+
+
 pub fn init_data_and_full_cycle_with_denoise_J<P: AsRef<Path>>(inp_dir: P, out_dir: P, noise_j_pct: f64, use_nn_j: bool) -> SolutionSettings where PathBuf: From<P> {
     SolutionSettings {
         // Задание начальных значений K

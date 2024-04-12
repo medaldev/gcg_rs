@@ -40,6 +40,44 @@ pub fn run_from_file(data_path: &Path, model_path: &Path, save_res_xls: &Path, w
     Ok(res)
 }
 
+pub fn denoise_tensor(arr: Vec<Vec<Vec<f64>>>, shape: (usize, usize, usize), model_path: &Path) -> anyhow::Result<Vec<Vec<f64>>> {
+    let device = get_device();
+    let kind = Kind::Float;
+
+    // let tensor = Tensor::zeros(&[1, shape.0 as i64, shape.1 as i64, shape.2 as i64], (kind, device));
+    let mut flattened = Vec::with_capacity(shape.0 * shape.1 * shape.2);
+    let ind = 0;
+    for i in 0..shape.0 {
+        for j in 0..shape.1 {
+            for k in 0..shape.2 {
+                flattened.push(arr[i][j][k]);
+            }
+        }
+    }
+    let tensor = Tensor::from_slice(&flattened).view([1, shape.0 as i64, shape.1 as i64, shape.2 as i64]).to_kind(kind).to_device(device);
+    println!("{:?}", tensor);
+    for i in 0..shape.0 {
+        for j in 0..shape.1 {
+            for k in 0..shape.2 {
+                let diff = arr[i][j][k] - tensor.f_double_value(&[0, i as i64, j as i64, k as i64]).unwrap();
+                assert!(diff < 1.0e-6);
+            }
+        }
+    }
+
+    // tensor.print();
+
+    let mut model = tch::CModule::load(model_path)?;
+    model.to(device, kind, false);
+
+    let output = model.forward_ts(&[&tensor])?;
+
+    let res = tensor_to_matrix(output, shape.1 as i64, shape.2 as i64);
+
+    Ok(res)
+
+}
+
 pub fn run_re(mut arr: Vec<Vec<f64>>, model_path: &Path, with_rescale: bool) -> anyhow::Result<Vec<Vec<f64>>> {
 
     let device = get_device();

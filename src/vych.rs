@@ -1,8 +1,13 @@
 use num::complex::Complex64;
 use num::Zero;
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator};
 use crate::consts::*;
 use crate::matrix_system::{fill_xy_pos, fill_xyv, fxy, integral_col};
 use crate::memory::create_vector_memory;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator};
+use rayon::iter::ParallelIterator;
+
+
 
 pub fn get_uvych(point: usize, n: usize, n_x: usize, n_y: usize, ip: usize, dim_x: f64, dim_y: f64, a: f64, b: f64, shift: f64,
                  J: &Vec<Complex64>, Uvych: &mut Vec<Complex64>, Bvych: &Vec<Complex64>, k0: Complex64) {
@@ -16,18 +21,36 @@ pub fn get_uvych(point: usize, n: usize, n_x: usize, n_y: usize, ip: usize, dim_
     fill_xyv(n, n_x, n_y, dim_x, dim_y, a, b, &mut xv, &mut yv, shift);
     fill_xy_pos(point, n, n_x, n_y, dim_x, dim_y, a, b, &mut x, &mut y);
 
-    for i in 0..n {
-        Uvych[i] = Complex64::zero();
-        for j in 0..n {
-            let flag = match i == j {
-                true => {1}
-                false => {0}
-            };
+    // for i in 0..n {
+    //     Uvych[i] = Complex64::zero();
+    //     for j in 0..n {
+    //
+    //         Uvych[i] += integral_col((i == j) as usize, n_x, n_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0)*J[j];
+    //     }
+    //     Uvych[i] += Bvych[i];
+    // }
 
-            Uvych[i] += integral_col(flag, n_x, n_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0)*J[j];
-        }
-        Uvych[i] += Bvych[i];
-    }
+    Uvych.par_iter_mut().zip(Bvych.par_iter()).enumerate().for_each(|(i, (uvych_val, bvych_val))| {
+
+        *uvych_val= (0..n).into_par_iter().map(|j| {
+            integral_col((i == j) as usize, n_x, n_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0)*J[j]
+        }).sum::<Complex64>() + bvych_val;
+
+    });
+
+    // for i in 0..n {
+    //     let mut check_val = Complex64::zero();
+    //     for j in 0..n {
+    //
+    //         check_val += integral_col((i == j) as usize, n_x, n_y, dim_x, dim_y, a, b, ip, x[j], y[j], xv[i], yv[i], k0)*J[j];
+    //     }
+    //     check_val += Bvych[i];
+    //
+    //     assert_eq!(check_val, Uvych[i]);
+    // }
+
+    // println!("Ok!");
+
 }
 
 
@@ -39,8 +62,7 @@ pub fn r_part_vych(point: usize, shift: f64, n_x: usize, n_y: usize, dim_x: f64,
     fill_xyv(n, n_x, n_y, dim_x, dim_y, a, b, &mut xv, &mut yv, shift);
 
 
-    for i in 0..n {
-        Bvych[i] = fxy(xv[i], yv[i], 0.0, k0, dim_x, dim_y);
-    }
+    *Bvych = xv.into_par_iter().zip(yv.into_par_iter()).map(|(xv_i, yv_i)| fxy(xv_i, yv_i, 0.0, k0, dim_x, dim_y)).collect();
+
 }
 

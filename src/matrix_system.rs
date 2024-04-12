@@ -1,6 +1,9 @@
 use num::complex::{Complex64, ComplexFloat};
 use num::Zero;
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefMutIterator};
 use crate::memory::create_vector_memory;
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::ParallelIterator;
 
 pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64, b: f64, xv: &mut [f64], yv: &mut [f64], shift: f64) {
 
@@ -22,15 +25,30 @@ pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64
     //     }
     // }
 
-    for i in 0..n_y {
-        for j in 0..n_x {
-            xv[p] = a + j as f64 * l_x + l_x / 2.0;
-            //yv[p] = b + i as f64 * l_y + l_y / 2.0 + 2.0 * dim_x;
-            yv[p] = b + i as f64 * l_y + l_y / 2.0 + 2.0 * dim_x;
+    xv.par_iter_mut().enumerate().for_each(|(p, x)| {
+        let j = p % n_x;
+        *x = a + j as f64 * l_x + l_x /  2.0;
+    });
 
-            p += 1;
-        }
-    }
+    yv.par_iter_mut().enumerate().for_each(|(p, y)| {
+        let i = p / n_x;
+        *y = b + i as f64 * l_y + l_y /  2.0 +  2.0 * dim_x;
+    });
+
+    let mut p = 0;
+
+
+    // for i in 0..n_y {
+    //     for j in 0..n_x {
+    //         assert_eq!(xv[p], a + j as f64 * l_x + l_x / 2.0);
+    //         assert_eq!(yv[p], b + i as f64 * l_y + l_y / 2.0 + 2.0 * dim_x);
+    //
+    //         p += 1;
+    //     }
+    // }
+    //
+    // println!("Ok!");
+
 }
 
 
@@ -73,7 +91,7 @@ pub fn fill_xy_col(N: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: 
 
 pub fn fxy(x: f64, y: f64, z: f64, k: Complex64, dim_x: f64, dim_y: f64) -> Complex64 {
     let x0 = 0.0;
-    let y0 = -2.5 * dim_y / 1.0 + 0.15;
+    let y0 = -dim_y;
     let z0 = 0.0;
 
     let r0 = ((x - x0)*(x - x0) + (y - y0)*(y - y0) + (z - z0)*(z - z0)).sqrt();

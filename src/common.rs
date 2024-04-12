@@ -46,7 +46,6 @@ pub fn add_noise_to_matrix(U: &mut Vec<Vec<f64>>, pct: f64) {
 
 
 pub fn add_noise_re_im(U: &mut Vec<Complex64>, pct: f64) {
-
     let rngs = {
         let (re, im) = separate_re_im(&U);
         (min_max_f64_vec(&re), min_max_f64_vec(&im))
@@ -54,13 +53,34 @@ pub fn add_noise_re_im(U: &mut Vec<Complex64>, pct: f64) {
     let max_noise_val_re = (rngs.0.1 - rngs.0.0) * pct;
     let max_noise_val_im = (rngs.1.1 - rngs.1.0) * pct;
 
+
     let mut rng = rand::thread_rng();
-    let re_noise = Uniform::from(0.0..max_noise_val_re);
-    let im_noise = Uniform::from(0.0..max_noise_val_im);
+    let re_noise_some = if max_noise_val_re != 0.0 {Some(Uniform::from(0.0..max_noise_val_re))} else {None};
+    let im_noise_some =  if max_noise_val_im != 0.0 {Some(Uniform::from(0.0..max_noise_val_im))} else {None};
 
     for num in U {
-        *num += Complex64::new(re_noise.sample(&mut rng), im_noise.sample(&mut rng));
+        *num += Complex64::new(
+            match re_noise_some {
+                None => { 0.}
+                Some(re_noise) => {re_noise.sample(&mut rng)}
+            }
+            ,
+            match im_noise_some {
+                None => { 0.}
+                Some(im_noise) => {im_noise.sample(&mut rng)}
+            }
+        );
     }
+}
+
+pub fn get_noised_tensor(some_vec: &Vec<Vec<f64>>, n_noised: usize, pct: f64) -> Vec<Vec<Vec<f64>>> {
+    let mut noised_vec = Vec::with_capacity(n_noised);
+    for i in 0..n_noised {
+        let mut vec_clone = some_vec.clone();
+        add_noise_to_matrix(&mut vec_clone, pct);
+        noised_vec.push(vec_clone);
+    }
+    noised_vec
 }
 
 
@@ -115,6 +135,31 @@ pub fn vec_to_matrix<T>(U: &Vec<T>, n_x: usize, n_y: usize) -> Vec<Vec<T>> where
     }
     res
 }
+
+pub fn shift_matrix_on_min_if_need(arr: &mut Vec<Vec<f64>>) -> f64  {
+
+    let min = min_max_f64_vec(&arr.concat()).0;
+
+    if min > 0.0 {
+        return 0.0;
+    }
+
+    for row in arr.iter_mut() {
+        for el in row {
+            *el -= min;
+        }
+    }
+    min
+}
+
+pub fn shift_matrix_on_num(arr: &mut Vec<Vec<f64>>, shift: f64)  {
+    for row in arr.iter_mut() {
+        for el in row {
+            *el += shift;
+        }
+    }
+}
+
 
 pub fn matrix_to_vec<T>(arr: Vec<Vec<T>>, n_x: usize, n_y: usize) -> Vec<T> where T: Zero + Clone + Copy {
     let mut U = vec![T::zero(); n_x * n_y];
@@ -205,4 +250,23 @@ pub fn copy_input_data(file_path: &Path, task_in_dir: &Path, task_out_dir: &Path
 
     let dest = task_in_dir.join(Path::new(new_name).with_extension("xls"));
     fs::copy(file_path, dest.as_path()).unwrap();
+}
+
+pub fn rotate_matrix(matrix: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+    let n = matrix.len();
+    let mut rotated_matrix = vec![vec![0.0; n]; n];
+
+    // Transpose the matrix
+    for i in 0..n {
+        for j in 0..n {
+            rotated_matrix[j][i] = matrix[i][j];
+        }
+    }
+
+    // Reverse each row
+    for row in rotated_matrix.iter_mut() {
+        row.reverse();
+    }
+
+    rotated_matrix
 }

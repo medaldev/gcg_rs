@@ -31,6 +31,7 @@ if __name__ == '__main__':
    # plt.yticks(fontsize=16)
     cb1.ax.tick_params(labelsize=16)
     plt.tight_layout()
+    #plt.savefig(file_plot_path[:-3]+"png")
     plt.show(block=True)
 
    # plt.tight_layout()    # Your code here, the script continues to run

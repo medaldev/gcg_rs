@@ -23,12 +23,14 @@ def read_matrix(path):
             list(map(lambda row: list(map(lambda el: float(el), row.split())), file_matrix.read().strip().split("\n"))))
     return matrix
 
-def plot_one(example_path, save_dir, name):
 
-    # if os.path.exists(os.path.join(save_dir, f'{name}.png')):
-    #     return
 
-    fig, axes = plt.subplots(3, 3, figsize=(20, 20))
+
+
+if __name__ == '__main__':
+    args = sys.argv
+    example_path = args[1]
+    fig, axes = plt.subplots(4, 3, figsize=(20, 30))
 
     images = []
 
@@ -47,45 +49,35 @@ def plot_one(example_path, save_dir, name):
     axes[1, 2].set_title("J_abs")
 
     images.append(axes[2, 0].imshow(read_matrix(os.path.join(example_path, "Uvych2_re.xls")), cmap="jet"))
-    axes[2, 0].set_title("Uvych2_re")
+    axes[2, 0].set_title("Uvych_re")
     images.append(axes[2, 1].imshow(read_matrix(os.path.join(example_path, "Uvych2_im.xls")), cmap="jet"))
-    axes[2, 1].set_title("Uvych2_im")
+    axes[2, 1].set_title("Uvych_im")
     images.append(axes[2, 2].imshow(read_matrix(os.path.join(example_path, "Uvych2_abs.xls")), cmap="jet"))
-    axes[2, 2].set_title("Uvych2_abs")
+    axes[2, 2].set_title("Uvych_abs")
+
+    images.append(axes[3, 0].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_re.xls")), cmap="jet"))
+    axes[3, 0].set_title("Uvych_re (noised)")
+    images.append(axes[3, 1].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_im.xls")), cmap="jet"))
+    axes[3, 1].set_title("Uvych_im (noised)")
+    images.append(axes[3, 2].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_abs.xls")), cmap="jet"))
+    axes[3, 2].set_title("Uvych_abs (noised)")
+
+
 
     for im in images:
         fig.colorbar(im, orientation='vertical', fraction=0.046, pad=0.04, format='%.7f')
 
-    plt.tight_layout()
-    fig.subplots_adjust(wspace=0.3, hspace=0.)
+    #plt.tight_layout()
+    fig.subplots_adjust(wspace=0.3, hspace=0.15)
 
     # Save the full figure...
-    fig.savefig(os.path.join(save_dir, f'{name}.png'))
+    fig.savefig(os.path.join(example_path, f'forward_task_plot.png'))
+    #plt.show(block=True)
 
-    plt.clf()
-    matplotlib.pyplot.close()
+    # plt.clf()
+    # matplotlib.pyplot.close()
 
-    del fig, axes, images
-    gc.collect()
+    # del fig, axes, images
+    # gc.collect()
 
-    print(name)
-
-
-
-def main(rootdir, save_dir):
-    with Pool(processes=10) as pool:
-        for subdir in os.listdir(rootdir):
-            example_path = os.path.join(rootdir, subdir)
-            if not os.path.isdir(example_path):
-                continue
-            pool.apply(plot_one, args=(example_path, save_dir, subdir))
-
-
-
-
-
-if __name__ == '__main__':
-    args = sys.argv
-    main(args[1], args[2])
-
-   # plt.tight_layout()    # Your code here, the script continues to run
+# plt.tight_layout()    # Your code here, the script continues to run
