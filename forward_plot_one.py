@@ -48,19 +48,19 @@ if __name__ == '__main__':
     images.append(axes[1, 2].imshow(read_matrix(os.path.join(example_path, "J_abs.xls")), cmap="jet"))
     axes[1, 2].set_title("J_abs")
 
-    images.append(axes[2, 0].imshow(read_matrix(os.path.join(example_path, "Uvych2_re.xls")), cmap="jet"))
+    images.append(axes[2, 0].imshow(read_matrix(os.path.join(example_path, "Uvych_re.xls")), cmap="jet"))
     axes[2, 0].set_title("Uvych_re")
-    images.append(axes[2, 1].imshow(read_matrix(os.path.join(example_path, "Uvych2_im.xls")), cmap="jet"))
+    images.append(axes[2, 1].imshow(read_matrix(os.path.join(example_path, "Uvych_im.xls")), cmap="jet"))
     axes[2, 1].set_title("Uvych_im")
-    images.append(axes[2, 2].imshow(read_matrix(os.path.join(example_path, "Uvych2_abs.xls")), cmap="jet"))
+    images.append(axes[2, 2].imshow(read_matrix(os.path.join(example_path, "Uvych_abs.xls")), cmap="jet"))
     axes[2, 2].set_title("Uvych_abs")
 
-    images.append(axes[3, 0].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_re.xls")), cmap="jet"))
-    axes[3, 0].set_title("Uvych_re (noised)")
-    images.append(axes[3, 1].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_im.xls")), cmap="jet"))
-    axes[3, 1].set_title("Uvych_im (noised)")
-    images.append(axes[3, 2].imshow(read_matrix(os.path.join(example_path, "Uvych2_noised_abs.xls")), cmap="jet"))
-    axes[3, 2].set_title("Uvych_abs (noised)")
+#     images.append(axes[3, 0].imshow(read_matrix(os.path.join(example_path, "Uvych_noised_re.xls")), cmap="jet"))
+#     axes[3, 0].set_title("Uvych_re (noised)")
+#     images.append(axes[3, 1].imshow(read_matrix(os.path.join(example_path, "Uvych_noised_im.xls")), cmap="jet"))
+#     axes[3, 1].set_title("Uvych_im (noised)")
+#     images.append(axes[3, 2].imshow(read_matrix(os.path.join(example_path, "Uvych_noised_abs.xls")), cmap="jet"))
+#     axes[3, 2].set_title("Uvych_abs (noised)")
 
 
 

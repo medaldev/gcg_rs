@@ -34,7 +34,7 @@ fn main() {
     let mut rng = rand::thread_rng();
     let gen_k0 = rand::distributions::Uniform::from(0.1..50.1);
     let gen_poly_size = rand::distributions::Uniform::from(0.02..0.1);
-    let gen_k0_dev = rand::distributions::Uniform::from(0.01..0.3);
+    let gen_k0_dev = rand::distributions::Uniform::from(0.01..0.9);
     let gen_irr = rand::distributions::Uniform::from(0.1..0.99);
     let gen_proba = rand::distributions::Uniform::from(0.2..0.99);
     let gen_spikiness = rand::distributions::Uniform::from(0.1..0.99);
