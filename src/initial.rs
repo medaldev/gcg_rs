@@ -379,7 +379,7 @@ pub fn polygon_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f
     let mut rng = rand::thread_rng();
     let born_gen = Uniform::from(0.0..1.0);
 
-    let k_gen = Uniform::from(surface.k0 - surface.k0 * k0_dev..surface.k0 + surface.k0 * k0_dev);
+    let k_gen = Uniform::from(surface.k0..surface.k0 + surface.k0 * k0_dev);
 
     let (offset_i, offset_j) = (each_abs_size.0.round() as usize * 1, each_abs_size.1.round() as usize * 1);
     let (step_i, step_j) = (each_abs_size.0.round() as usize * 4, each_abs_size.1.round() as usize * 4);

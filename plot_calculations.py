@@ -46,12 +46,12 @@ def plot_one(example_path, save_dir, name):
     images.append(axes[1, 2].imshow(read_matrix(os.path.join(example_path, "J_abs.xls")), cmap="jet"))
     axes[1, 2].set_title("J_abs")
 
-    images.append(axes[2, 0].imshow(read_matrix(os.path.join(example_path, "Uvych2_re.xls")), cmap="jet"))
-    axes[2, 0].set_title("Uvych2_re")
-    images.append(axes[2, 1].imshow(read_matrix(os.path.join(example_path, "Uvych2_im.xls")), cmap="jet"))
-    axes[2, 1].set_title("Uvych2_im")
-    images.append(axes[2, 2].imshow(read_matrix(os.path.join(example_path, "Uvych2_abs.xls")), cmap="jet"))
-    axes[2, 2].set_title("Uvych2_abs")
+    images.append(axes[2, 0].imshow(read_matrix(os.path.join(example_path, "Uvych_re.xls")), cmap="jet"))
+    axes[2, 0].set_title("Uvych_re")
+    images.append(axes[2, 1].imshow(read_matrix(os.path.join(example_path, "Uvych_im.xls")), cmap="jet"))
+    axes[2, 1].set_title("Uvych_im")
+    images.append(axes[2, 2].imshow(read_matrix(os.path.join(example_path, "Uvych_abs.xls")), cmap="jet"))
+    axes[2, 2].set_title("Uvych_abs")
 
     for im in images:
         fig.colorbar(im, orientation='vertical', fraction=0.046, pad=0.04, format='%.7f')

@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
 
     for type_data in ["train", "val"] {
 
-        let data_dir = PathBuf::from("/home/amedvedev/projects/python/DenoisingCNN/data/datasets/gcg19").join(type_data);
+        let data_dir = PathBuf::from("D:\\projects\\DenoisingCNN\\data\\datasets\\gcg19").join(type_data);
         let calc_dir = data_dir.join("calculations");
 
         // let clear_dir = data_dir.join("clear");
@@ -70,10 +70,29 @@ fn main() -> anyhow::Result<()> {
             //save_left_right_parts_of(task_dir.as_path(), &params, "Bvych_abs", "xls")?;
             //save_left_right_parts_of(task_dir.as_path(), &params, "Uvych_noised_abs", "xls")?;
 
+
+
+            // delete_if_exists(task_dir.join("Uvych_noised_re.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noised_im.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noised_abs.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noise_only_re.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noise_only_im.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noise_only_abs.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noised_re_rotated.xls").to_str().unwrap());
+            // delete_if_exists(task_dir.join("Uvych_noised_re_rotated.xls").to_str().unwrap());
+
+            // for ffn in ["Uvych_noised_re.xls", "Uvych_noised_im.xls", "Uvych_noised_abs.xls",
+            //     "Uvych_noise_only_re.xls", "Uvych_noise_only_im.xls", "Uvych_noise_only_abs.xls"]
+            // {
+            //     delete_if_exists(task_dir.join(ffn).to_str().unwrap())
+            // }
+
+
+            //println!("{:?}", task_dir);
             //save_noised_uvych(&params, &vector_stream);
 
-            // save_noised_vector(&params, &vector_stream, "Uvych2", 0.01, false);
-            save_noised_vector(&params, &vector_stream, "J", 0.30, true);
+            save_noised_vector(&params, &vector_stream, "Uvych", 0.001, false, 50);
+            // save_noised_vector(&params, &vector_stream, "J", 0.30, true);
             //save_rotated_matrix_pair_proba(&params, &vector_stream, "Uvych2_re","Uvych2_noised_re", "xls", 0.5);
 
 
@@ -81,18 +100,23 @@ fn main() -> anyhow::Result<()> {
 
             //save_noised_tensor(&params, &vector_stream, "K_abs", "xls", 64, 0.1);
             //save_noised_tensor(&params, &vector_stream, "Uvych2_re", "xls", 32, 0.001);
-            // save_rotated_matrix_pair_proba(&params, &vector_stream, "Uvych2_re",
-            //                                vec!["Uvych2_noised_re", "Uvych2_noise_only_re"], "xls", 0.5);
 
+            let some_vec = xls_to_matrix(task_dir.join(format!("{}.{}", "K_re", "xls")));
 
-            let some_vec = xls_to_matrix(task_dir.join(format!("{}.{}", "J_re", "xls")));
+            let k_sum = some_vec.concat().iter().sum::<f64>() - params.k0.re * params.n as f64;
 
-            // let k_sum = some_vec.concat().iter().sum::<f64>() - params.k0.re * params.n as f64;
-            //
             // if k_sum.abs() < 0.000001 {
             //     println!("{:?}, {}", task_dir, k_sum);
-            //     //fs::remove_dir_all(task_dir).unwrap();
+            //     fs::remove_dir_all(task_dir).unwrap();
             // }
+
+            // save_rotated_matrix_pair_proba(&params, &vector_stream, "Uvych_re",
+            //                                vec!["Uvych_noised_re"], "xls", 0.5);
+
+            // for nf in ["K", "J", "Bvych", "W"] {
+            //     resave_from_re_im(&params, &vector_stream, nf);
+            // }
+
 
             let (max_uv, min_uv) = min_max_f64_vec(&some_vec.concat());
 
@@ -127,7 +151,16 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+pub fn path_exists(path: &str) -> bool {
+    fs::metadata(path).is_ok()
+}
 
+pub fn delete_if_exists(path: &str) {
+    if path_exists(path) {
+        fs::remove_file(path).unwrap();
+
+    }
+}
 fn save_rotated_matrix_proba(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str, ext: &str, probability: f64)  {
     let mut some_vec = xls_to_matrix(vector_stream.input_dir.join(format!("{}.{}", namefile, ext)));
     let mut rng = rand::thread_rng();
@@ -173,6 +206,12 @@ fn save_noised_tensor(params: &TaskParameters, vector_stream: &ComplexVectorSave
     fs::write(vector_stream.output_dir.join(format!("{}_noised.{}", namefile, "tensor")), tensor_json).expect("Unable to write file");
 
 }
+
+fn resave_from_re_im(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str)  {
+    delete_if_exists(vector_stream.output_dir.join(format!("{}_abs.xls", namefile).as_str()).to_str().unwrap());
+    let data = load_vector(&params, &vector_stream, namefile);
+    vector_stream.save(&data, namefile, &[Xls], &params);
+}
 fn save_noised_k_no_k0(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str)  {
     let mut K_no_k0_noised = load_vector(&params, &vector_stream, "K");
     for num in K_no_k0_noised.iter_mut() {
@@ -214,7 +253,7 @@ fn save_noised_uvych(params: &TaskParameters, vector_stream: &ComplexVectorSaver
     vector_stream.load(&mut Uvych, params.n, "Uvych", Bin, &params);
 
     let mut Uvych_noised = Uvych.clone();
-    add_noise(&mut Uvych_noised, 1e-4);
+    add_noise(&mut Uvych_noised, 0.001);
 
     // let mut Uvych_div = create_vector_memory(params.n, Complex64::zero());
     //
@@ -228,7 +267,7 @@ fn save_noised_uvych(params: &TaskParameters, vector_stream: &ComplexVectorSaver
     // vector_stream.save(&Uvych_div, "Uvych_div", &[Xls], &params);
 }
 
-fn save_noised_vector(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str, pct: f64, noise_both: bool) {
+fn save_noised_vector(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str, pct: f64, noise_both: bool, k_times: usize) {
 
     let mut vector = create_vector_memory(params.n, Complex64::zero());
 
@@ -236,12 +275,22 @@ fn save_noised_vector(params: &TaskParameters, vector_stream: &ComplexVectorSave
 
     let mut only_noise = create_vector_memory(params.n, Complex64::zero());
 
-    let mut vector_noised = vector.clone();
-    if noise_both{
-        add_noise_re_im(&mut vector_noised, pct);
+    let mut vector_noised = create_vector_memory(params.n, Complex64::zero());
+
+    for _k in 0..k_times {
+        let mut vector_noised_step = vector.clone();
+        if noise_both{
+            add_noise_re_im(&mut vector_noised_step, pct);
+        }
+        else {
+            add_noise(&mut vector_noised_step, pct);
+        }
+        for i in 0..params.n {
+            vector_noised[i] += vector_noised_step[i];
+        }
     }
-    else {
-        add_noise(&mut vector_noised, pct);
+    for i in 0..params.n {
+        vector_noised[i] /= k_times as f64;
     }
 
     for i in 0..params.n {
