@@ -25,15 +25,28 @@ pub fn fill_xyv(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64
     //     }
     // }
 
-    xv.par_iter_mut().enumerate().for_each(|(p, x)| {
-        let j = p % n_x;
-        *x = a + j as f64 * l_x + l_x /  2.0;
-    });
+    for i in 0..n_y {
+        for j in 0..n_x {
+            if j < n_x / 2 {
+                xv[p] = -dim_x / 2.0 - (j as f64)*l_x - l_x / 2.0 - l_x / 20.0;
+            } else {
+                xv[p] = dim_x / 2.0 + (j as f64)*l_x + l_x / 2.0 + l_x / 20.0;
+            }
+            yv[p] = -dim_y / 2.0 + (i as f64)*l_y + l_y / 2.0;
 
-    yv.par_iter_mut().enumerate().for_each(|(p, y)| {
-        let i = p / n_x;
-        *y = b + i as f64 * l_y + l_y /  2.0 +  2.0 * dim_x;
-    });
+            p += 1;
+        }
+    }
+
+    // xv.par_iter_mut().enumerate().for_each(|(p, x)| {
+    //     let j = p % n_x;
+    //     *x = a + j as f64 * l_x + l_x /  2.0;
+    // });
+    //
+    // yv.par_iter_mut().enumerate().for_each(|(p, y)| {
+    //     let i = p / n_x;
+    //     *y = b + i as f64 * l_y + l_y /  2.0 +  2.0 * dim_x;
+    // });
 
     let mut p = 0;
 
