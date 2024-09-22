@@ -33,16 +33,16 @@ fn main() {
 
     let mut rng = rand::thread_rng();
     let gen_k0 = rand::distributions::Uniform::from(0.1..50.1);
-    let gen_poly_size = rand::distributions::Uniform::from(0.02..0.1);
+    let gen_poly_size = rand::distributions::Uniform::from(0.02..0.03);
     let gen_k0_dev = rand::distributions::Uniform::from(0.01..0.9);
     let gen_irr = rand::distributions::Uniform::from(0.1..0.99);
-    let gen_proba = rand::distributions::Uniform::from(0.2..0.99);
+    let gen_proba = rand::distributions::Uniform::from(0.2..0.59);
     let gen_spikiness = rand::distributions::Uniform::from(0.1..0.99);
     let gen_vert = rand::distributions::Uniform::from(10usize..70);
 
     for itera in 0..args.count {
 
-        for type_data in ["train", "val"] {
+        for type_data in ["val"] {
 
             let data_dir = args.data_dir.join(type_data).join("calculations");
 
@@ -63,7 +63,7 @@ fn main() {
             let vector_stream = ComplexVectorSaver::init(settings.input_dir.as_path(), settings.output_dir.as_path());
 
 
-            let p = 32;
+            let p = 10;
             let point = 2;
             let k0 = 16.0; // gen_k0.sample(&mut rng);
 
@@ -79,12 +79,19 @@ fn main() {
                     &mut surface,
                     gen_poly_size.sample(&mut rng),
                     gen_proba.sample(&mut rng),
-                    1000,
+                    20,
                     gen_k0_dev.sample(&mut rng),
                     gen_irr.sample(&mut rng),
                     gen_spikiness.sample(&mut rng),
                     gen_vert.sample(&mut rng)
                 ).unwrap();
+
+                // total_figs = initial::points_covering(
+                //     &mut surface,
+                //     gen_proba.sample(&mut rng),
+                //     15,
+                //     gen_k0_dev.sample(&mut rng),
+                // ).unwrap();
             }
 
             let K = build_complex_vector(
@@ -99,7 +106,7 @@ fn main() {
                 vec![0.0; surface.cols * surface.rows],
             );
 
-            fs::write(settings.output_dir.join("inhomogeneities.txt").as_path(), serde_json::to_string_pretty(&total_figs).unwrap()).unwrap();
+            //fs::write(settings.output_dir.join("inhomogeneities.txt").as_path(), serde_json::to_string_pretty(&total_figs).unwrap()).unwrap();
             write_f64_to_file(params.k0.re, settings.output_dir.join("k0_re.txt").as_path()).unwrap();
             write_f64_to_file(params.k0.im, settings.output_dir.join("k0_im.txt").as_path()).unwrap();
             vector_stream.save(&K, "K", &[Xls, Csv], &params);

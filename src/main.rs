@@ -12,10 +12,12 @@ mod common;
 
 mod tasks;
 
+use std::f64::consts::PI;
 use std::path::{Path, PathBuf};
+use num::complex::Complex64;
 use gcg2d::solvers::{solve, StatRes};
 use gcg2d::tasks::*;
-
+use crate::consts::GIGA;
 
 fn main() -> anyhow::Result<()> {
 
@@ -109,7 +111,7 @@ fn main() -> anyhow::Result<()> {
         load_j_from_files: false,
 
         // Внесение шума в J
-        add_noise_j: true,
+        add_noise_j: false,
         pct_noise_j: 0.1,
 
         // Использовать нейросеть для очистки J
@@ -127,15 +129,15 @@ fn main() -> anyhow::Result<()> {
         pct_noise_uvych: 0.05,
 
         // Решить обратную задачу
-        solve_inverse: true,
+        solve_inverse: false,
 
         // Пути к файлам
         input_dir: PathBuf::from("./output/"),
-        output_dir: PathBuf::from("./output/"),
+        output_dir: PathBuf::from("./check/"),
     };
 
 
-    let mut params = TaskParameters::from_grid(25, 2);
+    let mut params = TaskParameters::from_grid(2, 2);
     params.model = PathBuf::from("./models/J_matrix_denoiser_30pct_v_1.pt");
     let res = solve(&settings, &mut params);
 

@@ -104,7 +104,8 @@ pub fn fill_xy_col(N: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: 
 
 pub fn fxy(x: f64, y: f64, z: f64, k: Complex64, dim_x: f64, dim_y: f64) -> Complex64 {
     let x0 = 0.0;
-    let y0 = -dim_y;
+    //let y0 = -dim_y;
+    let y0 = dim_y / 2.0 + 0.15;
     let z0 = 0.0;
 
     let r0 = ((x - x0)*(x - x0) + (y - y0)*(y - y0) + (z - z0)*(z - z0)).sqrt();
@@ -144,6 +145,9 @@ pub fn calculate_matrix_col(point: usize, n_x: usize, n_y: usize,
             A[i][j] -= integral_col(flag, n_x, n_y, dim_x, dim_y, a, b, ip1, x[j], y[j], xc[i], yc[i], k0);
         }
     }
+
+    println!("{:?}", A);
+
 }
 
 
@@ -157,7 +161,10 @@ pub fn rpart_col(N: usize,  n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f
 
     for i in 0..N {
         B[i] = fxy(x[i], y[i], 0.0, k0, dim_x, dim_y);
+
     }
+
+
 
 }
 

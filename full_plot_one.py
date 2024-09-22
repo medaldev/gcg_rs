@@ -66,11 +66,12 @@ if __name__ == '__main__':
     for im in images:
         fig.colorbar(im, orientation='vertical', fraction=0.046, pad=0.04, format='%.7f')
 
-    #plt.tight_layout()
+    plt.tight_layout()
     fig.subplots_adjust(wspace=0.3, hspace=0.15)
 
     # Save the full figure...
     #fig.savefig(os.path.join(save_dir, f'{name}.png'))
+    plt.savefig("full_2.png")
     plt.show(block=True)
 
     # plt.clf()

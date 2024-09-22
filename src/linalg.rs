@@ -35,9 +35,11 @@ pub fn build_matrix(N: usize, A: &mut Vec<Vec<Complex64>>, W: &mut Vec<Complex64
             }
             A[i][i] = Complex64::new(1.0, 0.0);
             B[i] = Complex64::zero();
+
         }
 
     }
+
 }
 
 fn is_equal_vector<T>(n: usize, a: &[T], b: &[T]) -> bool where T: Eq {

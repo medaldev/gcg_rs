@@ -19,11 +19,11 @@ integ2 = [(-0.043750000000000004, -0.08125), (-0.018750000000000003, -0.08125), 
 #           [-0.03125, -0.08125], [-0.03125, -0.05625], [-0.03125, -0.03125]]
 
 # plt.scatter(*get_x_y(col), marker="x", label="col2", s=70)
-plt.scatter(*get_x_y(pos), label="pos", c="orange")
-plt.scatter(*get_x_y(col), marker="x", label="col", s=30, c="b")
+plt.scatter(*get_x_y(pos), label="Позиционные", c="orange")
+plt.scatter(*get_x_y(col), marker="x", label="Коллокационные", s=30, c="b")
 # plt.scatter(*get_x_y(pos2), label="pos2")
-plt.scatter(*get_x_y(integ), label="integ", marker="*", c="red")
-plt.scatter(*get_x_y(integ2), label="integ", marker="+", c="green")
+plt.scatter(*get_x_y(integ), label="Интегрирования (итерация i)", marker="*", c="red")
+plt.scatter(*get_x_y(integ2), label="Интегрирования (итерация i + 1)", marker="+", c="green")
 # plt.scatter(*get_x_y(integ2), label="integ2")
 plt.grid()
 plt.legend()
@@ -33,4 +33,4 @@ size = 0.2
 plt.xlim([-size, size])
 plt.ylim([-size, size])
 
-plt.show()
+plt.savefig("grid.png")

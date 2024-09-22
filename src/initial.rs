@@ -92,6 +92,12 @@ pub fn initial_k0(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f
 
 }
 
+pub fn initial_k0_new(n: usize, n_x: usize, n_y: usize, dim_x: f64, dim_y: f64, a: f64, b: f64, k1: Complex64,
+                  K: &mut [Complex64], W: &mut [Complex64]) {
+    for i in 0..n {
+        K[i] *= W[i] * 25.0;
+    }
+}
 
 pub fn initial_k_polygons(params: &TaskParameters) -> (Vec<Complex<f64>>, Vec<Complex<f64>>) {
 
@@ -218,6 +224,69 @@ pub trait Figure {
     fn is_belongs(&self, x: f64, y: f64) -> bool;
 
     fn draw(&self, x: f64, y: f64) -> f64;
+}
+
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+    pub k: f64,
+}
+
+impl Figure for Point {
+    fn is_belongs(&self, x: f64, y: f64) -> bool {
+        self.x == x && self.y == y
+    }
+
+    fn draw(&self, x: f64, y: f64) -> f64 {
+        match self.is_belongs(x, y) {
+            true => {
+                self.k
+            }
+            false => {
+                0.0
+            }
+        }
+    }
+}
+
+pub struct Rectangle {
+    pub x0: f64,
+    pub y0: f64,
+    pub width: f64,
+    pub height: f64,
+    pub k: f64,
+}
+
+impl Rectangle {
+    pub fn new(x0: f64, y0: f64, width: f64, height: f64, k: f64) -> Self {
+        Self {
+            x0,
+            y0,
+            width,
+            height,
+            k,
+        }
+    }
+}
+
+impl Figure for Rectangle {
+    fn is_belongs(&self, x: f64, y: f64) -> bool {
+        if (self.x0 - self.width / 2.0 > x && x < self.x0 + self.width / 2.0) && (self.y0 - self.height / 2.0 > y && y < self.y0 + self.height / 2.0) {
+            return true
+        }
+        return false
+    }
+
+    fn draw(&self, x: f64, y: f64) -> f64 {
+        match self.is_belongs(x, y) {
+            true => {
+                self.k
+            }
+            false => {
+                0.0
+            }
+        }
+    }
 }
 
 
@@ -384,8 +453,8 @@ pub fn polygon_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f
     let (offset_i, offset_j) = (each_abs_size.0.round() as usize * 1, each_abs_size.1.round() as usize * 1);
     let (step_i, step_j) = (each_abs_size.0.round() as usize * 4, each_abs_size.1.round() as usize * 4);
 
-    for i in (offset_i..surface.rows - offset_i).step_by(step_i) {
-        for j in (0..surface.cols - offset_j).step_by(step_j) {
+    for i in (offset_i..surface.rows - offset_i).step_by(step_i.max(1)) {
+        for j in (0..surface.cols - offset_j).step_by(step_j.max(1)) {
 
             if counter >= limit {
                 break
@@ -408,6 +477,86 @@ pub fn polygon_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f
                 center,
                 points,
             })
+        }
+    }
+
+    Ok(res)
+}
+
+
+pub fn rect_covering(surface: &mut Surface, each_size_pct: f64, each_proba: f64, limit: usize,
+                        k0_dev: f64) -> anyhow::Result<Vec<()>> {
+
+    let mut res = vec![];
+
+    let each_abs_size = (each_size_pct * surface.rows as f64, each_size_pct * surface.cols as f64);
+    let mut counter = 0;
+    let mut rng = rand::thread_rng();
+    let born_gen = Uniform::from(0.0..1.0);
+
+    let k_gen = Uniform::from(surface.k0..surface.k0 + surface.k0 * k0_dev);
+
+    let (offset_i, offset_j) = (each_abs_size.0.round() as usize * 1, each_abs_size.1.round() as usize * 1);
+    let (step_i, step_j) = (each_abs_size.0.round() as usize * 4, each_abs_size.1.round() as usize * 4);
+
+    for i in (offset_i..surface.rows - offset_i).step_by(step_i) {
+        for j in (0..surface.cols - offset_j).step_by(step_j) {
+
+            if counter >= limit {
+                break
+            }
+
+            if born_gen.sample(&mut rng) > each_proba {
+                continue
+            }
+
+            let center = (i as f64 + each_abs_size.0, j as f64 + each_abs_size.1);
+            let p = Rectangle::new(center.0, center.1, each_abs_size.0, each_abs_size.1, k_gen.sample(&mut rng));
+            surface.add_figure(p);
+
+            counter += 1;
+
+            res.push(())
+        }
+    }
+
+    Ok(res)
+}
+
+
+pub fn points_covering(surface: &mut Surface, each_proba: f64, limit: usize, k0_dev: f64) -> anyhow::Result<Vec<()>> {
+
+    let mut res = vec![];
+
+    let mut counter = 0;
+    let mut rng = rand::thread_rng();
+    let born_gen = Uniform::from(0.0..1.0);
+
+    let k_gen = Uniform::from(surface.k0..surface.k0 + surface.k0 * k0_dev);
+
+
+
+    for i in (0..surface.rows).step_by(2) {
+        for j in (0..surface.cols).step_by(2) {
+
+            if counter >= limit {
+                break
+            }
+
+            if born_gen.sample(&mut rng) > each_proba {
+                continue
+            }
+            let p = Point {
+                x: i as f64,
+                y: j as f64,
+                k: k_gen.sample(&mut rng),
+            };
+            surface.add_figure(p);
+
+
+            counter += 1;
+
+            res.push(())
         }
     }
 

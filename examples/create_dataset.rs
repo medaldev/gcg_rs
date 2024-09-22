@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
 
     for type_data in ["train", "val"] {
 
-        let data_dir = PathBuf::from("D:\\projects\\DenoisingCNN\\data\\datasets\\gcg19").join(type_data);
+        let data_dir = PathBuf::from("/home/amedvedev/projects/python/DenoisingCNN/data/datasets/gcg_10_2p").join(type_data);
         let calc_dir = data_dir.join("calculations");
 
         // let clear_dir = data_dir.join("clear");
@@ -91,19 +91,20 @@ fn main() -> anyhow::Result<()> {
             //println!("{:?}", task_dir);
             //save_noised_uvych(&params, &vector_stream);
 
-            save_noised_vector(&params, &vector_stream, "Uvych", 0.001, false, 50);
+            //save_noised_vector(&params, &vector_stream, "Uvych", 0.001, false, 100);
+            //save_noised_k_no_k0(&params, &vector_stream);
             // save_noised_vector(&params, &vector_stream, "J", 0.30, true);
             //save_rotated_matrix_pair_proba(&params, &vector_stream, "Uvych2_re","Uvych2_noised_re", "xls", 0.5);
 
 
-            //calc_uvych_bvych(&params, &vector_stream);
+            calc_uvych_bvych(&params, &vector_stream);
 
             //save_noised_tensor(&params, &vector_stream, "K_abs", "xls", 64, 0.1);
             //save_noised_tensor(&params, &vector_stream, "Uvych2_re", "xls", 32, 0.001);
 
             let some_vec = xls_to_matrix(task_dir.join(format!("{}.{}", "K_re", "xls")));
 
-            let k_sum = some_vec.concat().iter().sum::<f64>() - params.k0.re * params.n as f64;
+            //let k_sum = some_vec.concat().iter().sum::<f64>() - params.k0.re * params.n as f64;
 
             // if k_sum.abs() < 0.000001 {
             //     println!("{:?}, {}", task_dir, k_sum);
@@ -212,17 +213,17 @@ fn resave_from_re_im(params: &TaskParameters, vector_stream: &ComplexVectorSaver
     let data = load_vector(&params, &vector_stream, namefile);
     vector_stream.save(&data, namefile, &[Xls], &params);
 }
-fn save_noised_k_no_k0(params: &TaskParameters, vector_stream: &ComplexVectorSaver, namefile: &str)  {
+fn save_noised_k_no_k0(params: &TaskParameters, vector_stream: &ComplexVectorSaver)  {
     let mut K_no_k0_noised = load_vector(&params, &vector_stream, "K");
     for num in K_no_k0_noised.iter_mut() {
         *num -= params.k0;
     }
     vector_stream.save(&K_no_k0_noised, "K-k0", &[Xls], &params);
 
-    if K_no_k0_noised.iter().sum::<Complex64>().abs() > 0.0 {
-        add_noise_re_im(&mut K_no_k0_noised, 0.8);
-    }
-    vector_stream.save(&K_no_k0_noised, "K-k0_noised", &[Xls], &params);
+    // if K_no_k0_noised.iter().sum::<Complex64>().abs() > 0.0 {
+    //     add_noise_re_im(&mut K_no_k0_noised, 0.8);
+    // }
+    // vector_stream.save(&K_no_k0_noised, "K-k0_noised", &[Xls], &params);
 }
 
 fn save_left_right_parts_of(task_dir: &Path, params: &TaskParameters, namefile: &str, ext: &str) -> anyhow::Result<()> {

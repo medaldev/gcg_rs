@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use num::complex::Complex64;
 use serde_derive::{Deserialize, Serialize};
-use crate::consts::{EWAVE, GIGA};
+use crate::consts::{EWAVE, GIGA, MEGA};
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -41,7 +41,7 @@ impl TaskParameters {
     }
 
     pub fn base(p: usize, point: usize, ip1: usize, ip2: usize) -> Self {
-        TaskParameters::init(p, point, ip1, ip2, 1.1 * GIGA, Complex64::new(0.4, 0.0), 0.15, 0.15, 0.01, "./models/model_18_traced2.pt")
+        TaskParameters::init(p, point, ip1, ip2, 1.9 * GIGA, Complex64::new(0.4, 0.0), 0.15, 0.15, 0.01, "./models/model_18_traced2.pt")
 
     }
     pub fn init(p: usize, point: usize, ip1: usize, ip2: usize, hz: f64, k1: Complex64, dim_x: f64, dim_y: f64, alpha: f64, model: &str) -> Self {

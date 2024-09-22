@@ -7,7 +7,7 @@ use std::time::Instant;
 use num::complex::{Complex64, ComplexFloat};
 use num::Zero;
 use crate::direct_problem::direct_problem;
-use crate::initial::{initial_k0, initial_k_polygons};
+use crate::initial::{initial_k0, initial_k0_new, initial_k_polygons};
 use crate::memory::create_vector_memory;
 use crate::{common, neuro, vych};
 use crate::common::{add_noise, add_noise_re_im, add_noise_to_matrix, add_shift, build_complex_vector, get_noised_tensor, get_vec_im, get_vec_re, matrix_to_vec, separate_re_im, shift_matrix_on_min_if_need, shift_matrix_on_num, vec_to_matrix};
@@ -44,8 +44,8 @@ pub fn solve(settings: &SolutionSettings, params: &mut TaskParameters) -> Vec<St
 
     if settings.use_initial_k {
         // Задание начальных значений K
-        initial_k0(params.n, params.n_x, params.n_y, params.dim_x, params.dim_y, params.a, params.b, params.k1, &mut K, &mut W);
-        //(K, W) = initial_k_polygons(&params);
+        initial_k0_new(params.n, params.n_x, params.n_y, params.dim_x, params.dim_y, params.a, params.b, params.k1, &mut K, &mut W);
+        // (K, W) = initial_k_polygons(&params);
         println!("K was initialised from initial_k0 function.");
     }
 

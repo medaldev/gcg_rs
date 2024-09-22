@@ -15,7 +15,6 @@ pub fn direct_problem
 
 
     rpart_col(n, n_x, n_y, dim_x, dim_y, a, b, k0, ip1, ip2, &mut BB);
-
     calculate_matrix_col(point, n_x, n_y, K, dim_x, dim_y, a, b, n, ip1, ip2, &mut AA, k0);
     build_matrix(n, &mut AA, W, &mut BB);
 
